@@ -1,11 +1,20 @@
+# -*- coding: utf-8 -*-
+"""
+Aplicación de Streamlit para el análisis de datos de Scopus.
+Convertido desde el notebook BS04.ipynb.
+"""
+
+# =====================================================================================================================
+# REGION: Librerías
+# =====================================================================================================================
 import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import statistics as st_stats # Renombrado para evitar conflicto con streamlit
+import statistics as st_stats # Renombrado para evitar conflicto
 import math as mt
 import sys
-import io # Importante para capturar el output de df.info()
+import io # Para capturar el output de df.info()
 from datetime import datetime
 import networkx as nx
 from wordcloud import WordCloud
@@ -19,12 +28,17 @@ import os
 import logging
 from collections import Counter
 import warnings
+import matplotlib.ticker as mtick
+import matplotlib as mpl
+from matplotlib.ticker import PercentFormatter
+from matplotlib.pyplot import figure
 
 # Ignorar todos los warnings como en tu notebook
 warnings.filterwarnings("ignore")
 
-# --- Funciones Auxiliares de tu Notebook ---
-# (Se mantienen las funciones que usas en el procesamiento)
+# =====================================================================================================================
+# REGION: Funciones Auxiliares del Notebook
+# =====================================================================================================================
 
 def ClasificadorAcceso(dato):
     """
@@ -47,11 +61,17 @@ def ContarAutores(dato):
     else:
         return 0
 
-# --- Función de Carga de Datos ---
+# =====================================================================================================================
+# REGION: Carga de Datos (Cacheada por Streamlit)
+# =====================================================================================================================
+
 # Usamos un decorador de Streamlit para cachear los datos y que la app sea rápida.
 # La app buscará el archivo "scopusffandhkorwtorhf.csv" en la misma carpeta.
 @st.cache_data
 def load_data(file_path):
+    """
+    Carga los datos desde un archivo CSV.
+    """
     try:
         df = pd.read_csv(file_path)
         return df
@@ -60,37 +80,24 @@ def load_data(file_path):
         st.error("Por favor, asegúrate de subir este archivo a tu repositorio de GitHub junto con 'app.py'.")
         return None
 
-# --- Comienzo de la Aplicación Streamlit ---
-
-st.set_page_config(layout="wide")
-st.title("📊 Análisis Interactivo de Publicaciones de Scopus")
-st.write("Esta aplicación web muestra los resultados del análisis del cuaderno `BS04.ipynb`.")
-
-# Define el nombre del archivo de datos
-DATA_FILE = "scopusffandhkorwtorhf.csv"
-
-# Carga los datos
-dfScopus_raw = load_data(DATA_FILE)
-
-# Solo si el archivo se cargó correctamente, continúa con el análisis
-if dfScopus_raw is not None:
-    # Hacemos una copia para no alterar el caché
-    dfScopus = dfScopus_raw.copy()
-
-    st.header("1. Vista Previa de los Datos Crudos")
-    st.dataframe(dfScopus.head())
-
-    # --- Procesamiento y Limpieza de Datos ---
-    st.header("2. Procesamiento y Limpieza")
-    st.write(f"Tamaño original de los datos: `{dfScopus.shape}`")
+# =====================================================================================================================
+# REGION: Procesamiento y Limpieza de Datos (Cacheado)
+# =====================================================================================================================
+@st.cache_data
+def process_data(df_raw):
+    """
+    Aplica toda la limpieza y transformación al DataFrame.
+    """
+    dfScopus = df_raw.copy()
 
     # 1. Eliminar columnas
     eliminar = [
         'Author(s) ID', 'Volume', 'Issue', 'Art. No.', 'Page start',
         'Page end', 'Page count', 'DOI', 'Link', 'Source', 'EID'
     ]
-    dfScopus = dfScopus.drop(columns=eliminar)
-    st.write(f"Tamaño después de eliminar columnas: `{dfScopus.shape}`")
+    # Comprobar si las columnas existen antes de borrarlas
+    eliminar_existentes = [col for col in eliminar if col in dfScopus.columns]
+    dfScopus = dfScopus.drop(columns=eliminar_existentes)
 
     # 2. Renombrar columnas
     newcols = {
@@ -102,85 +109,501 @@ if dfScopus_raw is not None:
         'Open Access' : 'ACCESO'
     }
     dfScopus.rename(columns=newcols, inplace=True)
-    st.subheader("Datos con columnas renombradas (head)")
-    st.dataframe(dfScopus.head(1))
 
-    # 3. Información del DataFrame
-    st.subheader("Información del DataFrame (df.info())")
-    # Capturamos el output de df.info() para mostrarlo en Streamlit
-    buffer = io.StringIO()
-    dfScopus.info(buf=buffer)
-    s = buffer.getvalue()
-    st.text(s)
+    # 3. Ingeniería de Características
+    dfScopus['LISTAUTORES'] = dfScopus['AUTORES'].str.split('; ')
+    dfScopus['LISTAUTORESCOMPLETOS'] = dfScopus['AUTORESCOMPLETOS'].str.split('; ')
+    dfScopus['ANIO'] = pd.to_numeric(dfScopus['ANIO'], errors='coerce')
+    dfScopus['KEYWORDS'] = dfScopus['PCLAVEA'].fillna('') + '; ' + dfScopus['PCLAVEI'].fillna('')
+    dfScopus['ALLKEYWORDS'] = dfScopus['KEYWORDS'].str.split('; ')
+    dfScopus['OPENACCESS'] = dfScopus['ACCESO'].apply(ClasificadorAcceso)
+    dfScopus['CANTIDADAUTORES'] = dfScopus['LISTAUTORES'].apply(ContarAutores)
+    
+    # Columna de Citaciones por año
+    dfScopus['Citaciones por año'] = dfScopus['CITACIONES'] / (datetime.now().year + 1 - dfScopus['ANIO'])
 
-    # 4. Ingeniería de Características
-    with st.spinner("Realizando ingeniería de características..."):
-        dfScopus['LISTAUTORES'] = dfScopus['AUTORES'].str.split('; ')
-        dfScopus['ANIO'] = pd.to_numeric(dfScopus['ANIO'], errors='coerce')
-        dfScopus['KEYWORDS'] = dfScopus['PCLAVEA'].fillna('') + '; ' + dfScopus['PCLAVEI'].fillna('')
-        dfScopus['ALLKEYWORDS'] = dfScopus['KEYWORDS'].str.split('; ')
-        dfScopus['OPENACCESS'] = dfScopus['ACCESO'].apply(ClasificadorAcceso)
-        dfScopus['CANTIDADAUTORES'] = dfScopus['LISTAUTORES'].apply(ContarAutores)
-    st.success("Ingeniería de características completada.")
+    # Columna 'Citado'
+    dfScopus['Citado'] = np.where(dfScopus['CITACIONES'] > 0, 'Si', 'No')
+
+    # Columnas de Afiliaciones y País
+    if 'Affiliations' in dfScopus.columns:
+        dfScopus['Afilaciones'] = dfScopus['Affiliations'].str.split('; ')
+        dfScopus['pais'] = dfScopus['Afilaciones'].str[-1]
+        dfScopus['Pais'] = dfScopus['pais'].str.split().str[-1]
+        dfScopus['Pais'] = dfScopus['Pais'].replace('States', 'USA')
+        dfScopus['Pais'] = dfScopus['Pais'].replace('Kingdom', 'United Kingdom')
+    else:
+        # Crear columnas vacías si 'Affiliations' no existe para evitar errores
+        dfScopus['Afilaciones'] = [[]] * len(dfScopus)
+        dfScopus['Pais'] = [None] * len(dfScopus)
+
+    # Columna de Caracteres en Título
+    dfScopus['CARACTERESTITULO'] = dfScopus['TITULO'].str.len()
 
 
-    # --- Análisis Interactivo de Autores ---
-    st.header("3. Análisis de Autores")
+    # 4. Limpieza de Keywords (reemplaza el bucle lento de tqdm)
+    dfScopus['ALLKEYWORDS'] = dfScopus['ALLKEYWORDS'].apply(lambda keys: [k.strip() for k in keys if k and k.strip()])
+    longitudactual = dfScopus.shape[0]
+    dfScopus = dfScopus[dfScopus['ALLKEYWORDS'].map(len) > 0].copy()
+    longitudnueva = dfScopus.shape[0]
+    contadorborrado = longitudactual - longitudnueva
+    
+    return dfScopus, longitudactual, longitudnueva, contadorborrado
 
-    # Contar la frecuencia de cada autor
-    autores = dfScopus['LISTAUTORES'].explode()
-    cuentauores = Counter(autores)
-    st.write(f'El total de registros de autores analizados es **{len(autores)}**.')
+# =====================================================================================================================
+# REGION: Configuración de la Página Streamlit
+# =====================================================================================================================
 
-    # --- ¡Aquí está la magia de Streamlit! ---
-    # Reemplazamos el parámetro estático de Colab por un slider interactivo
-    st.markdown("---")
-    CantidadAutores = st.slider(
-        "👇 Selecciona el número de autores a visualizar:",
-        min_value=5,
-        max_value=50,
-        value=10,  # Valor por defecto
-        step=5
+st.set_page_config(page_title="Análisis de Scopus", layout="wide")
+st.title("📊 Análisis Interactivo de Publicaciones de Scopus")
+st.write("Resultados del análisis del cuaderno `BS04.ipynb` convertidos a una aplicación web.")
+
+# Define el nombre del archivo de datos
+DATA_FILE = "scopusffandhkorwtorhf.csv"
+
+# Carga los datos
+dfScopus_raw = load_data(DATA_FILE)
+
+# Solo si el archivo se cargó correctamente, continúa con el análisis
+if dfScopus_raw is not None:
+
+    # --- Procesamiento de Datos ---
+    with st.spinner("Procesando y limpiando los datos..."):
+        dfScopus, longitudactual, longitudnueva, contadorborrado = process_data(dfScopus_raw)
+
+    # --- Panel Lateral de Controles ---
+    st.sidebar.header("Filtros Interactivos")
+
+    CantidadAutores = st.sidebar.slider(
+        "Top Autores Frecuentes:",
+        min_value=5, max_value=50, value=10, step=5
+    )
+    
+    CantidadPalabrasClave = st.sidebar.slider(
+        "Top Palabras Clave Frecuentes:",
+        min_value=5, max_value=50, value=20, step=5
     )
 
-    # El gráfico se actualizará automáticamente cuando muevas el slider
-    st.subheader(f"Top {CantidadAutores} Autores más Frecuentes")
-
-    # Seleccionamos la cantidad de autores a visualizar
-    top_autores = cuentauores.most_common(CantidadAutores)
-
-    # Convertir a un DataFrame para facilitar la visualización
-    top_autores_df = pd.DataFrame(top_autores, columns=['Author', 'Count'])
-
-    # Crear la figura y el gráfico de barras horizontales
-    # Es mejor práctica en Streamlit crear explícitamente la figura (fig) y los ejes (ax)
-    fig, ax = plt.subplots(figsize=(10, 6))
-    bars = ax.barh(top_autores_df['Author'], top_autores_df['Count'], color='skyblue')
-
-    # Agregar etiquetas con los valores al final de cada barra
-    for bar in bars:
-        width = bar.get_width()
-        ax.text(width + 0.1, bar.get_y() + bar.get_height() / 2,
-                 f'{width}', ha='left', va='center')
-
-    # Configurar etiquetas y título
-    ax.set_xlabel('Número de Publicaciones')
-    ax.set_ylabel('Autores')
-    ax.set_title(f'Top {CantidadAutores} Autores más Frecuentes')
-    ax.invert_yaxis() # Invertir el eje Y para que se muestre de mayor a menor
-    ax.grid(axis='x', linestyle='--', alpha=0.7)
+    CantidadFuentes = st.sidebar.slider(
+        "Top Fuentes Comunes:",
+        min_value=5, max_value=50, value=10, step=5
+    )
     
-    # Quitar el borde derecho y superior para un look más limpio
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
+    search_string = st.sidebar.text_input(
+        "Buscar Autor (ej. Lauder G.):",
+        "Lauder G."
+    )
 
-    # Usar st.pyplot() para mostrar la figura de matplotlib
-    st.pyplot(fig)
+    # --- Resumen del Procesamiento ---
+    with st.expander("Ver Resumen del Procesamiento de Datos"):
+        st.subheader("Información del DataFrame (df.info())")
+        buffer = io.StringIO()
+        dfScopus.info(buf=buffer)
+        s = buffer.getvalue()
+        st.text(s)
+        
+        st.subheader("Limpieza de Palabras Clave")
+        st.metric("Registros antes de limpiar 'ALLKEYWORDS'", longitudactual)
+        st.metric("Registros después de limpiar 'ALLKEYWORDS'", longitudnueva)
+        st.metric("Registros eliminados (sin palabras clave)", contadorborrado, delta_type="inverse")
 
-    st.markdown("---")
-    st.header("4. Explorador de Datos Completo")
-    st.write("Usa los filtros para explorar el dataset procesado.")
-    st.dataframe(dfScopus)
+
+    # --- Pestañas de Visualización ---
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "Análisis de Autores", 
+        "Análisis de Publicaciones", 
+        "Análisis de Palabras Clave", 
+        "Fuentes y Afiliación", 
+        "Análisis de Citaciones",
+        "Búsqueda y Rankings"
+    ])
+
+    # ==================================================================
+    # PESTAÑA 1: ANÁLISIS DE AUTORES
+    # ==================================================================
+    with tab1:
+        st.header("Análisis de Autores")
+        
+        # --- Gráfico 1: Top Autores (AUTORES) ---
+        st.subheader(f"Top {CantidadAutores} Autores (Formato Corto)")
+        autores = dfScopus['LISTAUTORES'].explode()
+        cuentauores = Counter(autores)
+        top_autores = cuentauores.most_common(CantidadAutores)
+        top_autores_df = pd.DataFrame(top_autores, columns=['Author', 'Count'])
+
+        fig1, ax1 = plt.subplots(figsize=(10, 6))
+        bars1 = ax1.barh(top_autores_df['Author'], top_autores_df['Count'], color='skyblue')
+        ax1.set_xlabel('Número de Publicaciones')
+        ax1.set_ylabel('Autores')
+        ax1.set_title(f'Top {CantidadAutores} Autores más Frecuentes')
+        ax1.invert_yaxis()
+        ax1.grid(axis='x', linestyle='--', alpha=0.7)
+        for bar in bars1:
+            width = bar.get_width()
+            ax1.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+        st.pyplot(fig1)
+
+        # --- Gráfico 2: Top Autores (COMPLETOS) ---
+        st.subheader(f"Top {CantidadAutores} Autores (Nombre Completo)")
+        autorescompletos = dfScopus['LISTAUTORESCOMPLETOS'].explode()
+        cuentaautorescompletos = Counter(autorescompletos)
+        top_autores_completos = cuentaautorescompletos.most_common(CantidadAutores)
+        top_autores_completos_df = pd.DataFrame(top_autores_completos, columns=['Author', 'Count'])
+
+        fig2, ax2 = plt.subplots(figsize=(10, 6))
+        bars2 = ax2.barh(top_autores_completos_df['Author'], top_autores_completos_df['Count'], color='lightgreen')
+        ax2.set_xlabel('Número de Publicaciones')
+        ax2.set_ylabel('Autores')
+        ax2.set_title(f'Top {CantidadAutores} Autores (Nombres Completos)')
+        ax2.invert_yaxis()
+        ax2.grid(axis='x', linestyle='--', alpha=0.7)
+        for bar in bars2:
+            width = bar.get_width()
+            ax2.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+        st.pyplot(fig2)
+
+        # --- Gráfico 3: Número de autores por publicacion ---
+        st.subheader("Número de autores por publicación")
+        df3filtrado = dfScopus[dfScopus['CANTIDADAUTORES'] >= 1]
+        conteo_autores = df3filtrado['CANTIDADAUTORES'].value_counts().sort_index()
+        
+        fig3, ax3 = plt.subplots(figsize=(10, 6))
+        ax3.bar(conteo_autores.index, conteo_autores.values)
+        ax3.set_title('Número de autores por publicacion')
+        ax3.set_xlabel('Número de autores')
+        ax3.set_ylabel('Número de publicaciones')
+        ax3.grid(True)
+        st.pyplot(fig3)
+
+    # ==================================================================
+    # PESTAÑA 2: ANÁLISIS DE PUBLICACIONES
+    # ==================================================================
+    with tab2:
+        st.header("Análisis de Publicaciones")
+
+        # --- Gráfico 4: Publicaciones por año ---
+        st.subheader("Distribución de publicaciones por año")
+        pubanio = dfScopus.copy()
+        pubporanio = pubanio['ANIO'].value_counts().sort_index()
+        
+        fig4, ax4 = plt.subplots(figsize=(12, 6))
+        bars4 = pubporanio.plot(kind='bar', color='peru', ax=ax4)
+        for bar in bars4.containers[0]:
+            height = bar.get_height()
+            ax4.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+        ax4.set_xlabel('Año')
+        ax4.set_ylabel('Número de publicaciones')
+        st.pyplot(fig4)
+
+        # --- Gráfico 5: Publicaciones acumuladas ---
+        st.subheader("Publicaciones acumuladas por año")
+        df_acum = pubporanio.reset_index()
+        df_acum.columns = ['ANIO', 'count']
+        df_acum = df_acum.sort_values(by='ANIO')
+        df_acum['Acumulado'] = df_acum['count'].cumsum()
+
+        fig5, ax5 = plt.subplots(figsize=(12, 6))
+        ax5.bar(df_acum['ANIO'], df_acum['count'], width=0.8, label='Publicaciones por año', color='lightblue')
+        ax5.set_ylabel('Publicaciones por año')
+        ax5.legend(loc='upper left')
+        
+        ax5b = ax5.twinx() # Eje Y secundario
+        ax5b.plot(df_acum['ANIO'], df_acum['Acumulado'], label='Publicaciones Acumuladas', color='red', marker='o')
+        ax5b.set_ylabel('Publicaciones acumuladas')
+        ax5b.legend(loc='upper right')
+        st.pyplot(fig5)
+
+        # --- Gráfico 6: Tipo de documentos ---
+        st.subheader("Distribución de Tipos de Documentos")
+        document_type_counts = dfScopus['TIPO'].value_counts()
+        
+        fig6, ax6 = plt.subplots(figsize=(10, 6))
+        bars6 = document_type_counts.plot(kind='bar', color='lightblue', ax=ax6)
+        for bar in bars6.containers[0]:
+            height = bar.get_height()
+            ax6.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+        ax6.set_xlabel('Tipo de Documento')
+        ax6.set_ylabel('Número de Publicaciones')
+        ax6.set_title('Distribución de Tipos de Documentos')
+        plt.xticks(rotation=45, ha='right')
+        st.pyplot(fig6)
+
+        # --- Gráfico 7: Caracteres en Título ---
+        st.subheader("Distribución de Caracteres en el Título")
+        fig7, ax7 = plt.subplots(figsize=(10, 4))
+        ax7.boxplot(dfScopus['CARACTERESTITULO'].dropna(), vert=False, flierprops=dict(markerfacecolor='r', marker='o'), showfliers=False)
+        ax7.set_title('Distribución de Caracteres en el titulo')
+        ax7.set_xlabel('Caracteres')
+        ax7.grid(True)
+        st.pyplot(fig7)
+
+    # ==================================================================
+    # PESTAÑA 3: ANÁLISIS DE PALABRAS CLAVE
+    # ==================================================================
+    with tab3:
+        st.header("Análisis de Palabras Clave")
+        
+        # Contar keywords
+        keywords_exploded = dfScopus['ALLKEYWORDS'].explode()
+        keyword_counts = Counter(keywords_exploded)
+        if '' in keyword_counts: del keyword_counts['']
+        
+        # --- Gráfico 8: Top Palabras Clave ---
+        st.subheader(f"Top {CantidadPalabrasClave} Palabras clave más frecuentes")
+        top_keywords = keyword_counts.most_common(CantidadPalabrasClave)
+        top_keywords_df = pd.DataFrame(top_keywords, columns=['Keyword', 'Count'])
+
+        fig8, ax8 = plt.subplots(figsize=(10, 8))
+        bars8 = ax8.barh(top_keywords_df['Keyword'], top_keywords_df['Count'], color='salmon')
+        for bar in bars8:
+            width = bar.get_width()
+            ax8.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+        ax8.set_xlabel('Frecuencia')
+        ax8.set_ylabel('Palabras clave')
+        ax8.set_title(f'Top {CantidadPalabrasClave} Palabras clave más frecuentes')
+        ax8.invert_yaxis()
+        st.pyplot(fig8)
+
+        # --- Gráfico 9: Nube de Palabras ---
+        st.subheader("Nube de Palabras para Keywords")
+        try:
+            wordcloud_text = ' '.join(keywords_exploded.dropna())
+            if wordcloud_text:
+                wordcloud = WordCloud(width=800, height=400, background_color='white').generate(wordcloud_text)
+                fig9, ax9 = plt.subplots(figsize=(10, 6))
+                ax9.imshow(wordcloud, interpolation='bilinear')
+                ax9.axis('off')
+                ax9.set_title('Nube de Palabras para Keywords')
+                st.pyplot(fig9)
+            else:
+                st.warning("No hay suficientes palabras clave para generar una nube de palabras.")
+        except Exception as e:
+            st.error(f"Error al generar la nube de palabras: {e}")
+
+        # --- Gráfico 10: Frecuencia de palabras en el titulo ---
+        st.subheader("Frecuencia de palabras en el título (longitud > 3, frecuencia > 40)")
+        palabras_titulo = dfScopus['TITULO'].dropna().str.lower().str.cat(sep=';').split(' ')
+        cuenta_palabras_titulo = Counter(palabras_titulo)
+        top_palabras_titulo = cuenta_palabras_titulo.most_common()
+        palabras_titulo_df = pd.DataFrame(top_palabras_titulo, columns=['Palabra', 'Numero'])
+        palabras_titulo_df['Longitud'] = palabras_titulo_df['Palabra'].str.len()
+        palabras_titulo_largas_df = palabras_titulo_df[(palabras_titulo_df['Longitud'] > 3) & (palabras_titulo_df['Numero'] > 40)]
+        # Eliminar 'for' 'and' 'the' 'with'
+        palabras_comunes_a_quitar = ['from', 'with', 'research', 'analysis', 'using', 'based', 'model', 'control', 'between', 'study']
+        palabras_titulo_largas_df = palabras_titulo_largas_df[~palabras_titulo_largas_df['Palabra'].isin(palabras_comunes_a_quitar)]
+
+        if not palabras_titulo_largas_df.empty:
+            fig10, ax10 = plt.subplots(figsize=(10, 8))
+            bars10 = ax10.barh(palabras_titulo_largas_df['Palabra'], palabras_titulo_largas_df['Numero'], color='red')
+            ax10.set_xlabel('Frecuencia')
+            ax10.set_ylabel('Palabra en Título')
+            ax10.set_title('Palabras más frecuentes en Títulos')
+            ax10.invert_yaxis()
+            st.pyplot(fig10)
+        else:
+            st.warning("No se encontraron palabras frecuentes en títulos con los filtros aplicados.")
+
+
+    # ==================================================================
+    # PESTAÑA 4: FUENTES Y AFILIACIÓN
+    # ==================================================================
+    with tab4:
+        st.header("Análisis de Fuentes y Afiliación")
+
+        # --- Gráfico 11: Fuentes de publicación ---
+        st.subheader(f"Top {CantidadFuentes} Fuentes de publicación más comunes")
+        source_counts = dfScopus['FUENTE'].value_counts().head(CantidadFuentes)
+        
+        fig11, ax11 = plt.subplots(figsize=(10, 6))
+        bars11 = source_counts.plot(kind='bar', ax=ax11)
+        for bar in bars11.containers[0]:
+            height = bar.get_height()
+            ax11.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+        shortened_labels = [' '.join(label.split()[:5]) for label in source_counts.index]
+        ax11.set_title(f'Top {CantidadFuentes} Fuentes de publicación más comunes')
+        ax11.set_xlabel('Fuente de publicación')
+        ax11.set_ylabel('Número de publicaciones')
+        ax11.set_xticklabels(shortened_labels, rotation=45, ha='right')
+        ax11.grid(True)
+        st.pyplot(fig11)
+
+        if 'Affiliations' in dfScopus_raw.columns:
+            # --- Gráfico 12: Instituciones ---
+            st.subheader("Instituciones más Frecuentes")
+            instituciones = dfScopus['Afilaciones'].explode()
+            cuenta_instituciones = Counter(instituciones)
+            top_instituciones = cuenta_instituciones.most_common(11)
+            
+            top_instituciones_df = pd.DataFrame(top_instituciones, columns=['Institución', 'Numero'])
+            if not top_instituciones_df.empty:
+                # Intentar eliminar la primera fila si es un valor nulo/vacío
+                if pd.isna(top_instituciones_df.iloc[0, 0]) or top_instituciones_df.iloc[0, 0].strip() == '':
+                     top_instituciones_df = top_instituciones_df.drop([0])
+                
+                fig12, ax12 = plt.subplots(figsize=(10, 6))
+                bars12 = ax12.barh(top_instituciones_df['Institución'], top_instituciones_df['Numero'], color='green')
+                for bar in bars12:
+                    width = bar.get_width()
+                    ax12.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+                ax12.set_xlabel('Número de publicaciones')
+                ax12.set_ylabel('Institución')
+                ax12.set_title(f'Top 10 Instituciones más Frecuentes')
+                ax12.invert_yaxis()
+                st.pyplot(fig12)
+            else:
+                st.warning("No se encontraron datos de instituciones.")
+
+            # --- Gráfico 13: País ---
+            st.subheader("País de publicación más frecuentes")
+            pais = dfScopus['Pais'].explode().dropna()
+            cuenta_pais = Counter(pais)
+            top_pais = cuenta_pais.most_common(10)
+            df_pais = pd.DataFrame(top_pais, columns=['Pais', 'Número de publicaciones'])
+            
+            fig13, ax13 = plt.subplots(figsize=(10, 6))
+            bars13 = ax13.barh(df_pais['Pais'], df_pais['Número de publicaciones'], color='red')
+            for bar in bars13:
+                width = bar.get_width()
+                ax13.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+            ax13.set_xlabel('Número de publicaciones')
+            ax13.set_ylabel('País')
+            ax13.set_title(f'Top 10 Países más frecuentes')
+            ax13.invert_yaxis()
+            st.pyplot(fig13)
+        
+        else:
+            st.warning("La columna 'Affiliations' no se encontró en el archivo CSV, se omiten los gráficos de Institución y País.")
+
+
+    # ==================================================================
+    # PESTAÑA 5: ANÁLISIS DE CITACIONES
+    # ==================================================================
+    with tab5:
+        st.header("Análisis de Citaciones")
+
+        col1, col2 = st.columns(2)
+        
+        # --- Gráfico 14: Acceso Abierto ---
+        with col1:
+            st.subheader("Publicaciones de acceso abierto")
+            open_access_counts = dfScopus['OPENACCESS'].value_counts()
+            mylabels = ["No", "Si"]
+            
+            fig14, ax14 = plt.subplots(figsize=(6, 6))
+            if not open_access_counts.empty:
+                ax14.pie(open_access_counts, autopct='%1.1f%%', colors=['skyblue', 'red'], startangle=90, labels=mylabels)
+                ax14.set_title('(a) Publicaciones de acceso abierto')
+                ax14.legend()
+            st.pyplot(fig14)
+
+        # --- Gráfico 15: Publicaciones con citaciones ---
+        with col2:
+            st.subheader("Publicaciones con citaciones")
+            conteo_publicaciones_citadas = dfScopus['Citado'].value_counts()
+            
+            fig15, ax15 = plt.subplots(figsize=(6, 6))
+            if not conteo_publicaciones_citadas.empty:
+                labels = conteo_publicaciones_citadas.keys()
+                ax15.pie(conteo_publicaciones_citadas, autopct='%1.1f%%', labels=labels)
+                ax15.set_title('(b) Publicaciones con citaciones')
+                ax15.legend()
+            st.pyplot(fig15)
+
+        st.divider()
+
+        # --- Gráfico 16: Distribución de Citaciones (Log) ---
+        st.subheader("Distribución de Citaciones (Escala Logarítmica)")
+        citation_counts = dfScopus['CITACIONES'].value_counts().sort_index()
+        fig16, ax16 = plt.subplots(figsize=(10, 6))
+        ax16.bar(citation_counts.index, citation_counts.values)
+        ax16.set_title('Distribución de Citaciones')
+        ax16.set_xlabel('Número de Citaciones')
+        ax16.set_ylabel('Frecuencia')
+        ax16.grid(True)
+        ax16.set_xscale('log') # Escala logarítmica
+        st.pyplot(fig16)
+
+        # --- Gráfico 17: Boxplot Citaciones (Todas vs Review) ---
+        st.subheader("Boxplot de Citaciones (Todas vs. Revisión)")
+        revision = dfScopus[dfScopus['TIPO'] == 'Review']
+        
+        fig17, ax17 = plt.subplots(figsize=(10, 6))
+        datos = [dfScopus['CITACIONES'], revision['CITACIONES']]
+        mylabels = ["Todas las publicaciones", "Publicaciones de revisión"]
+        bp = ax17.boxplot(datos, labels=mylabels, showfliers=False) # showfliers=False para imitar el notebook
+        
+        # Extraer medianas y etiquetarlas
+        medians = bp['medians']
+        for i, median in enumerate(medians):
+            value = median.get_ydata()[0]
+            ax17.text(i + 1, value, f'{value:.2f}', ha='center', va='bottom', color='black')
+        
+        ax17.set_ylabel('Número de Citaciones')
+        ax17.grid(True)
+        st.pyplot(fig17)
+
+        # --- Gráfico 18: Boxplot Citaciones por Año ---
+        st.subheader("Boxplot de Citaciones por Año")
+        fig18, ax18 = plt.subplots(figsize=(10, 6))
+        datos_cpa = [dfScopus['Citaciones por año'].dropna()]
+        mylabels_cpa = ["Todas las publicaciones"]
+        bp_cpa = ax18.boxplot(datos_cpa, labels=mylabels_cpa, showfliers=False)
+        
+        medians_cpa = bp_cpa['medians']
+        for i, median in enumerate(medians_cpa):
+            value = median.get_ydata()[0]
+            ax18.text(i + 1, value, f'{value:.2f}', ha='center', va='bottom', color='black')
+        
+        ax18.set_ylabel('Número de Citaciones por Año')
+        ax18.grid(True)
+        st.pyplot(fig18)
+
+
+    # ==================================================================
+    # PESTAÑA 6: BÚSQUEDA Y RANKINGS
+    # ==================================================================
+    with tab6:
+        st.header("Búsqueda y Rankings de Publicaciones")
+
+        # --- Búsqueda por Autor ---
+        st.subheader(f"Resultados de búsqueda para: '{search_string}'")
+        if search_string:
+            results = dfScopus[dfScopus['AUTORES'].str.contains(search_string, na=False)]
+            columnas_a_extraer = ['TITULO', 'AUTORES', 'CITACIONES']
+            results1 = results[columnas_a_extraer]
+            results2 = results1.sort_values(by='CITACIONES', ascending=False)
+            st.dataframe(results2.head(30))
+        else:
+            st.info("Escribe un nombre de autor en el panel lateral izquierdo para buscar.")
+
+        st.divider()
+        
+        col_rank1, col_rank2, col_rank3 = st.columns(3)
+
+        # --- Ranking 1: Mayor Impacto (General) ---
+        with col_rank1:
+            st.subheader("Top 10 Mayor Impacto (General)")
+            impacto = dfScopus.sort_values(by='CITACIONES', ascending=False)[['TITULO', 'AUTORES', 'CITACIONES']]
+            st.dataframe(impacto.head(10))
+
+        # --- Ranking 2: Mayor Impacto (Review) ---
+        with col_rank2:
+            st.subheader("Top 10 Mayor Impacto (Review)")
+            revision_rank = dfScopus[dfScopus['TIPO'] == 'Review']
+            impactorevision = revision_rank.sort_values(by='CITACIONES', ascending=False)[['TITULO', 'AUTORES', 'CITACIONES']]
+            st.dataframe(impactorevision.head(10))
+
+        # --- Ranking 3: Mayor Impacto (Citaciones por Año) ---
+        with col_rank3:
+            st.subheader("Top 10 Mayor Impacto (Cit./Año)")
+            impacto_cpa = dfScopus.sort_values(by='Citaciones por año', ascending=False)[['TITULO', 'AUTORES', 'Citaciones por año']]
+            st.dataframe(impacto_cpa.head(10))
+
+    # --- Expander para ver datos completos ---
+    with st.expander("Ver DataFrame Procesado Completo"):
+        st.dataframe(dfScopus)
 
 else:
     st.warning("La aplicación no puede continuar porque el archivo de datos no se ha cargado.")
+    st.info("Asegúrate de que el archivo 'scopusffandhkorwtorhf.csv' esté en tu repositorio de GitHub.")
+
