@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Aplicación de Streamlit para el análisis de datos de Scopus.
-Convertido desde el notebook BS04.ipynb.
-"""
-
 # =====================================================================================================================
 # REGION: Librerías
 # =====================================================================================================================
@@ -120,14 +114,16 @@ def process_data(df_raw):
     dfScopus['CANTIDADAUTORES'] = dfScopus['LISTAUTORES'].apply(ContarAutores)
     
     # Columna de Citaciones por año
-    dfScopus['Citaciones por año'] = dfScopus['CITACIONES'] / (datetime.now().year + 1 - dfScopus['ANIO'])
+    # Usar el año actual dinámicamente
+    current_year = datetime.now().year
+    dfScopus['Citaciones por año'] = dfScopus['CITACIONES'] / (current_year + 1 - dfScopus['ANIO'])
 
     # Columna 'Citado'
     dfScopus['Citado'] = np.where(dfScopus['CITACIONES'] > 0, 'Si', 'No')
 
     # Columnas de Afiliaciones y País
-    if 'Affiliations' in dfScopus.columns:
-        dfScopus['Afilaciones'] = dfScopus['Affiliations'].str.split('; ')
+    if 'Affiliations' in dfScopus_raw.columns:
+        dfScopus['Afilaciones'] = dfScopus_raw['Affiliations'].str.split('; ')
         dfScopus['pais'] = dfScopus['Afilaciones'].str[-1]
         dfScopus['Pais'] = dfScopus['pais'].str.split().str[-1]
         dfScopus['Pais'] = dfScopus['Pais'].replace('States', 'USA')
@@ -226,54 +222,90 @@ if dfScopus_raw is not None:
         
         # --- Gráfico 1: Top Autores (AUTORES) ---
         st.subheader(f"Top {CantidadAutores} Autores (Formato Corto)")
-        autores = dfScopus['LISTAUTORES'].explode()
-        cuentauores = Counter(autores)
-        top_autores = cuentauores.most_common(CantidadAutores)
-        top_autores_df = pd.DataFrame(top_autores, columns=['Author', 'Count'])
+        
+        try:
+            autores = dfScopus['LISTAUTORES'].explode()
+            cuentauores = Counter(autores)
+            top_autores = cuentauores.most_common(CantidadAutores)
+            top_autores_df = pd.DataFrame(top_autores, columns=['Author', 'Count'])
 
-        fig1, ax1 = plt.subplots(figsize=(10, 6))
-        bars1 = ax1.barh(top_autores_df['Author'], top_autores_df['Count'], color='skyblue')
-        ax1.set_xlabel('Número de Publicaciones')
-        ax1.set_ylabel('Autores')
-        ax1.set_title(f'Top {CantidadAutores} Autores más Frecuentes')
-        ax1.invert_yaxis()
-        ax1.grid(axis='x', linestyle='--', alpha=0.7)
-        for bar in bars1:
-            width = bar.get_width()
-            ax1.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
-        st.pyplot(fig1)
+            # Crear la figura y los ejes
+            fig1, ax1 = plt.subplots(figsize=(10, 6))
+            
+            # Dibujar en los ejes (ax1)
+            bars1 = ax1.barh(top_autores_df['Author'], top_autores_df['Count'], color='skyblue')
+            ax1.set_xlabel('Número de Publicaciones')
+            ax1.set_ylabel('Autores')
+            ax1.set_title(f'Top {CantidadAutores} Autores más Frecuentes')
+            ax1.invert_yaxis()
+            ax1.grid(axis='x', linestyle='--', alpha=0.7)
+            for bar in bars1:
+                width = bar.get_width()
+                ax1.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() para dibujar el gráfico ---
+            st.pyplot(fig1)
+
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 1 (Top Autores): {e}")
+
 
         # --- Gráfico 2: Top Autores (COMPLETOS) ---
         st.subheader(f"Top {CantidadAutores} Autores (Nombre Completo)")
-        autorescompletos = dfScopus['LISTAUTORESCOMPLETOS'].explode()
-        cuentaautorescompletos = Counter(autorescompletos)
-        top_autores_completos = cuentaautorescompletos.most_common(CantidadAutores)
-        top_autores_completos_df = pd.DataFrame(top_autores_completos, columns=['Author', 'Count'])
+        
+        try:
+            autorescompletos = dfScopus['LISTAUTORESCOMPLETOS'].explode()
+            cuentaautorescompletos = Counter(autorescompletos)
+            top_autores_completos = cuentaautorescompletos.most_common(CantidadAutores)
+            top_autores_completos_df = pd.DataFrame(top_autores_completos, columns=['Author', 'Count'])
 
-        fig2, ax2 = plt.subplots(figsize=(10, 6))
-        bars2 = ax2.barh(top_autores_completos_df['Author'], top_autores_completos_df['Count'], color='lightgreen')
-        ax2.set_xlabel('Número de Publicaciones')
-        ax2.set_ylabel('Autores')
-        ax2.set_title(f'Top {CantidadAutores} Autores (Nombres Completos)')
-        ax2.invert_yaxis()
-        ax2.grid(axis='x', linestyle='--', alpha=0.7)
-        for bar in bars2:
-            width = bar.get_width()
-            ax2.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
-        st.pyplot(fig2)
+            # Crear la figura y los ejes
+            fig2, ax2 = plt.subplots(figsize=(10, 6))
+            
+            # Dibujar en los ejes (ax2)
+            bars2 = ax2.barh(top_autores_completos_df['Author'], top_autores_completos_df['Count'], color='lightgreen')
+            ax2.set_xlabel('Número de Publicaciones')
+            ax2.set_ylabel('Autores')
+            ax2.set_title(f'Top {CantidadAutores} Autores (Nombres Completos)')
+            ax2.invert_yaxis()
+            ax2.grid(axis='x', linestyle='--', alpha=0.7)
+            for bar in bars2:
+                width = bar.get_width()
+                ax2.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig2)
+            
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 2 (Autores Completos): {e}")
+
 
         # --- Gráfico 3: Número de autores por publicacion ---
         st.subheader("Número de autores por publicación")
-        df3filtrado = dfScopus[dfScopus['CANTIDADAUTORES'] >= 1]
-        conteo_autores = df3filtrado['CANTIDADAUTORES'].value_counts().sort_index()
         
-        fig3, ax3 = plt.subplots(figsize=(10, 6))
-        ax3.bar(conteo_autores.index, conteo_autores.values)
-        ax3.set_title('Número de autores por publicacion')
-        ax3.set_xlabel('Número de autores')
-        ax3.set_ylabel('Número de publicaciones')
-        ax3.grid(True)
-        st.pyplot(fig3)
+        try:
+            # Asegurarse que 'CANTIDADAUTORES' existe
+            if 'CANTIDADAUTORES' in dfScopus.columns:
+                df3filtrado = dfScopus[dfScopus['CANTIDADAUTORES'] >= 1]
+                conteo_autores = df3filtrado['CANTIDADAUTORES'].value_counts().sort_index()
+                
+                # Crear la figura y los ejes
+                fig3, ax3 = plt.subplots(figsize=(10, 6))
+                
+                # Dibujar en los ejes (ax3)
+                ax3.bar(conteo_autores.index, conteo_autores.values)
+                ax3.set_title('Número de autores por publicacion')
+                ax3.set_xlabel('Número de autores')
+                ax3.set_ylabel('Número de publicaciones')
+                ax3.grid(True)
+                
+                # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+                st.pyplot(fig3)
+            else:
+                st.warning("Columna 'CANTIDADAUTORES' no encontrada.")
+
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 3 (Autores por Publicación): {e}")
 
     # ==================================================================
     # PESTAÑA 2: ANÁLISIS DE PUBLICACIONES
@@ -283,59 +315,82 @@ if dfScopus_raw is not None:
 
         # --- Gráfico 4: Publicaciones por año ---
         st.subheader("Distribución de publicaciones por año")
-        pubanio = dfScopus.copy()
-        pubporanio = pubanio['ANIO'].value_counts().sort_index()
-        
-        fig4, ax4 = plt.subplots(figsize=(12, 6))
-        bars4 = pubporanio.plot(kind='bar', color='peru', ax=ax4)
-        for bar in bars4.containers[0]:
-            height = bar.get_height()
-            ax4.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
-        ax4.set_xlabel('Año')
-        ax4.set_ylabel('Número de publicaciones')
-        st.pyplot(fig4)
+        try:
+            pubanio = dfScopus.copy()
+            pubporanio = pubanio['ANIO'].value_counts().sort_index()
+            
+            fig4, ax4 = plt.subplots(figsize=(12, 6))
+            bars4 = pubporanio.plot(kind='bar', color='peru', ax=ax4)
+            for bar in bars4.containers[0]:
+                height = bar.get_height()
+                ax4.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+            ax4.set_xlabel('Año')
+            ax4.set_ylabel('Número de publicaciones')
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig4)
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 4 (Publicaciones por Año): {e}")
+
 
         # --- Gráfico 5: Publicaciones acumuladas ---
         st.subheader("Publicaciones acumuladas por año")
-        df_acum = pubporanio.reset_index()
-        df_acum.columns = ['ANIO', 'count']
-        df_acum = df_acum.sort_values(by='ANIO')
-        df_acum['Acumulado'] = df_acum['count'].cumsum()
+        try:
+            df_acum = pubporanio.reset_index()
+            df_acum.columns = ['ANIO', 'count']
+            df_acum = df_acum.sort_values(by='ANIO')
+            df_acum['Acumulado'] = df_acum['count'].cumsum()
 
-        fig5, ax5 = plt.subplots(figsize=(12, 6))
-        ax5.bar(df_acum['ANIO'], df_acum['count'], width=0.8, label='Publicaciones por año', color='lightblue')
-        ax5.set_ylabel('Publicaciones por año')
-        ax5.legend(loc='upper left')
-        
-        ax5b = ax5.twinx() # Eje Y secundario
-        ax5b.plot(df_acum['ANIO'], df_acum['Acumulado'], label='Publicaciones Acumuladas', color='red', marker='o')
-        ax5b.set_ylabel('Publicaciones acumuladas')
-        ax5b.legend(loc='upper right')
-        st.pyplot(fig5)
+            fig5, ax5 = plt.subplots(figsize=(12, 6))
+            ax5.bar(df_acum['ANIO'], df_acum['count'], width=0.8, label='Publicaciones por año', color='lightblue')
+            ax5.set_ylabel('Publicaciones por año')
+            ax5.legend(loc='upper left')
+            
+            ax5b = ax5.twinx() # Eje Y secundario
+            ax5b.plot(df_acum['ANIO'], df_acum['Acumulado'], label='Publicaciones Acumuladas', color='red', marker='o')
+            ax5b.set_ylabel('Publicaciones acumuladas')
+            ax5b.legend(loc='upper right')
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig5)
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 5 (Publicaciones Acumuladas): {e}")
+
 
         # --- Gráfico 6: Tipo de documentos ---
         st.subheader("Distribución de Tipos de Documentos")
-        document_type_counts = dfScopus['TIPO'].value_counts()
-        
-        fig6, ax6 = plt.subplots(figsize=(10, 6))
-        bars6 = document_type_counts.plot(kind='bar', color='lightblue', ax=ax6)
-        for bar in bars6.containers[0]:
-            height = bar.get_height()
-            ax6.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
-        ax6.set_xlabel('Tipo de Documento')
-        ax6.set_ylabel('Número de Publicaciones')
-        ax6.set_title('Distribución de Tipos de Documentos')
-        plt.xticks(rotation=45, ha='right')
-        st.pyplot(fig6)
+        try:
+            document_type_counts = dfScopus['TIPO'].value_counts()
+            
+            fig6, ax6 = plt.subplots(figsize=(10, 6))
+            bars6 = document_type_counts.plot(kind='bar', color='lightblue', ax=ax6)
+            for bar in bars6.containers[0]:
+                height = bar.get_height()
+                ax6.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+            ax6.set_xlabel('Tipo de Documento')
+            ax6.set_ylabel('Número de Publicaciones')
+            ax6.set_title('Distribución de Tipos de Documentos')
+            plt.xticks(rotation=45, ha='right')
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig6)
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 6 (Tipos de Documento): {e}")
 
         # --- Gráfico 7: Caracteres en Título ---
         st.subheader("Distribución de Caracteres en el Título")
-        fig7, ax7 = plt.subplots(figsize=(10, 4))
-        ax7.boxplot(dfScopus['CARACTERESTITULO'].dropna(), vert=False, flierprops=dict(markerfacecolor='r', marker='o'), showfliers=False)
-        ax7.set_title('Distribución de Caracteres en el titulo')
-        ax7.set_xlabel('Caracteres')
-        ax7.grid(True)
-        st.pyplot(fig7)
+        try:
+            fig7, ax7 = plt.subplots(figsize=(10, 4))
+            ax7.boxplot(dfScopus['CARACTERESTITULO'].dropna(), vert=False, flierprops=dict(markerfacecolor='r', marker='o'), showfliers=False)
+            ax7.set_title('Distribución de Caracteres en el titulo')
+            ax7.set_xlabel('Caracteres')
+            ax7.grid(True)
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig7)
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 7 (Caracteres en Título): {e}")
+
 
     # ==================================================================
     # PESTAÑA 3: ANÁLISIS DE PALABRAS CLAVE
@@ -343,26 +398,32 @@ if dfScopus_raw is not None:
     with tab3:
         st.header("Análisis de Palabras Clave")
         
-        # Contar keywords
-        keywords_exploded = dfScopus['ALLKEYWORDS'].explode()
-        keyword_counts = Counter(keywords_exploded)
-        if '' in keyword_counts: del keyword_counts['']
-        
-        # --- Gráfico 8: Top Palabras Clave ---
-        st.subheader(f"Top {CantidadPalabrasClave} Palabras clave más frecuentes")
-        top_keywords = keyword_counts.most_common(CantidadPalabrasClave)
-        top_keywords_df = pd.DataFrame(top_keywords, columns=['Keyword', 'Count'])
+        try:
+            # Contar keywords
+            keywords_exploded = dfScopus['ALLKEYWORDS'].explode()
+            keyword_counts = Counter(keywords_exploded)
+            if '' in keyword_counts: del keyword_counts['']
+            
+            # --- Gráfico 8: Top Palabras Clave ---
+            st.subheader(f"Top {CantidadPalabrasClave} Palabras clave más frecuentes")
+            top_keywords = keyword_counts.most_common(CantidadPalabrasClave)
+            top_keywords_df = pd.DataFrame(top_keywords, columns=['Keyword', 'Count'])
 
-        fig8, ax8 = plt.subplots(figsize=(10, 8))
-        bars8 = ax8.barh(top_keywords_df['Keyword'], top_keywords_df['Count'], color='salmon')
-        for bar in bars8:
-            width = bar.get_width()
-            ax8.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
-        ax8.set_xlabel('Frecuencia')
-        ax8.set_ylabel('Palabras clave')
-        ax8.set_title(f'Top {CantidadPalabrasClave} Palabras clave más frecuentes')
-        ax8.invert_yaxis()
-        st.pyplot(fig8)
+            fig8, ax8 = plt.subplots(figsize=(10, 8))
+            bars8 = ax8.barh(top_keywords_df['Keyword'], top_keywords_df['Count'], color='salmon')
+            for bar in bars8:
+                width = bar.get_width()
+                ax8.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+            ax8.set_xlabel('Frecuencia')
+            ax8.set_ylabel('Palabras clave')
+            ax8.set_title(f'Top {CantidadPalabrasClave} Palabras clave más frecuentes')
+            ax8.invert_yaxis()
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig8)
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 8 (Top Keywords): {e}")
+
 
         # --- Gráfico 9: Nube de Palabras ---
         st.subheader("Nube de Palabras para Keywords")
@@ -374,6 +435,8 @@ if dfScopus_raw is not None:
                 ax9.imshow(wordcloud, interpolation='bilinear')
                 ax9.axis('off')
                 ax9.set_title('Nube de Palabras para Keywords')
+                
+                # --- ¡CORRECCIÓN! Usar st.pyplot() ---
                 st.pyplot(fig9)
             else:
                 st.warning("No hay suficientes palabras clave para generar una nube de palabras.")
@@ -382,26 +445,31 @@ if dfScopus_raw is not None:
 
         # --- Gráfico 10: Frecuencia de palabras en el titulo ---
         st.subheader("Frecuencia de palabras en el título (longitud > 3, frecuencia > 40)")
-        palabras_titulo = dfScopus['TITULO'].dropna().str.lower().str.cat(sep=';').split(' ')
-        cuenta_palabras_titulo = Counter(palabras_titulo)
-        top_palabras_titulo = cuenta_palabras_titulo.most_common()
-        palabras_titulo_df = pd.DataFrame(top_palabras_titulo, columns=['Palabra', 'Numero'])
-        palabras_titulo_df['Longitud'] = palabras_titulo_df['Palabra'].str.len()
-        palabras_titulo_largas_df = palabras_titulo_df[(palabras_titulo_df['Longitud'] > 3) & (palabras_titulo_df['Numero'] > 40)]
-        # Eliminar 'for' 'and' 'the' 'with'
-        palabras_comunes_a_quitar = ['from', 'with', 'research', 'analysis', 'using', 'based', 'model', 'control', 'between', 'study']
-        palabras_titulo_largas_df = palabras_titulo_largas_df[~palabras_titulo_largas_df['Palabra'].isin(palabras_comunes_a_quitar)]
+        try:
+            palabras_titulo = dfScopus['TITULO'].dropna().str.lower().str.cat(sep=';').split(' ')
+            cuenta_palabras_titulo = Counter(palabras_titulo)
+            top_palabras_titulo = cuenta_palabras_titulo.most_common()
+            palabras_titulo_df = pd.DataFrame(top_palabras_titulo, columns=['Palabra', 'Numero'])
+            palabras_titulo_df['Longitud'] = palabras_titulo_df['Palabra'].str.len()
+            palabras_titulo_largas_df = palabras_titulo_df[(palabras_titulo_df['Longitud'] > 3) & (palabras_titulo_df['Numero'] > 40)]
+            # Eliminar 'for' 'and' 'the' 'with'
+            palabras_comunes_a_quitar = ['from', 'with', 'research', 'analysis', 'using', 'based', 'model', 'control', 'between', 'study']
+            palabras_titulo_largas_df = palabras_titulo_largas_df[~palabras_titulo_largas_df['Palabra'].isin(palabras_comunes_a_quitar)]
 
-        if not palabras_titulo_largas_df.empty:
-            fig10, ax10 = plt.subplots(figsize=(10, 8))
-            bars10 = ax10.barh(palabras_titulo_largas_df['Palabra'], palabras_titulo_largas_df['Numero'], color='red')
-            ax10.set_xlabel('Frecuencia')
-            ax10.set_ylabel('Palabra en Título')
-            ax10.set_title('Palabras más frecuentes en Títulos')
-            ax10.invert_yaxis()
-            st.pyplot(fig10)
-        else:
-            st.warning("No se encontraron palabras frecuentes en títulos con los filtros aplicados.")
+            if not palabras_titulo_largas_df.empty:
+                fig10, ax10 = plt.subplots(figsize=(10, 8))
+                bars10 = ax10.barh(palabras_titulo_largas_df['Palabra'], palabras_titulo_largas_df['Numero'], color='red')
+                ax10.set_xlabel('Frecuencia')
+                ax10.set_ylabel('Palabra en Título')
+                ax10.set_title('Palabras más frecuentes en Títulos')
+                ax10.invert_yaxis()
+                
+                # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+                st.pyplot(fig10)
+            else:
+                st.warning("No se encontraron palabras frecuentes en títulos con los filtros aplicados.")
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 10 (Palabras en Título): {e}")
 
 
     # ==================================================================
@@ -412,64 +480,80 @@ if dfScopus_raw is not None:
 
         # --- Gráfico 11: Fuentes de publicación ---
         st.subheader(f"Top {CantidadFuentes} Fuentes de publicación más comunes")
-        source_counts = dfScopus['FUENTE'].value_counts().head(CantidadFuentes)
-        
-        fig11, ax11 = plt.subplots(figsize=(10, 6))
-        bars11 = source_counts.plot(kind='bar', ax=ax11)
-        for bar in bars11.containers[0]:
-            height = bar.get_height()
-            ax11.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
-        shortened_labels = [' '.join(label.split()[:5]) for label in source_counts.index]
-        ax11.set_title(f'Top {CantidadFuentes} Fuentes de publicación más comunes')
-        ax11.set_xlabel('Fuente de publicación')
-        ax11.set_ylabel('Número de publicaciones')
-        ax11.set_xticklabels(shortened_labels, rotation=45, ha='right')
-        ax11.grid(True)
-        st.pyplot(fig11)
-
-        if 'Affiliations' in dfScopus_raw.columns:
-            # --- Gráfico 12: Instituciones ---
-            st.subheader("Instituciones más Frecuentes")
-            instituciones = dfScopus['Afilaciones'].explode()
-            cuenta_instituciones = Counter(instituciones)
-            top_instituciones = cuenta_instituciones.most_common(11)
+        try:
+            source_counts = dfScopus['FUENTE'].value_counts().head(CantidadFuentes)
             
-            top_instituciones_df = pd.DataFrame(top_instituciones, columns=['Institución', 'Numero'])
-            if not top_instituciones_df.empty:
-                # Intentar eliminar la primera fila si es un valor nulo/vacío
-                if pd.isna(top_instituciones_df.iloc[0, 0]) or top_instituciones_df.iloc[0, 0].strip() == '':
-                     top_instituciones_df = top_instituciones_df.drop([0])
+            fig11, ax11 = plt.subplots(figsize=(10, 6))
+            bars11 = source_counts.plot(kind='bar', ax=ax11)
+            for bar in bars11.containers[0]:
+                height = bar.get_height()
+                ax11.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+            shortened_labels = [' '.join(label.split()[:5]) for label in source_counts.index]
+            ax11.set_title(f'Top {CantidadFuentes} Fuentes de publicación más comunes')
+            ax11.set_xlabel('Fuente de publicación')
+            ax11.set_ylabel('Número de publicaciones')
+            ax11.set_xticklabels(shortened_labels, rotation=45, ha='right')
+            ax11.grid(True)
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig11)
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 11 (Fuentes): {e}")
+
+        
+        # --- Gráfico 12: Instituciones ---
+        st.subheader("Instituciones más Frecuentes")
+        if 'Afilaciones' in dfScopus.columns:
+            try:
+                instituciones = dfScopus['Afilaciones'].explode()
+                cuenta_instituciones = Counter(instituciones)
+                top_instituciones = cuenta_instituciones.most_common(11)
                 
-                fig12, ax12 = plt.subplots(figsize=(10, 6))
-                bars12 = ax12.barh(top_instituciones_df['Institución'], top_instituciones_df['Numero'], color='green')
-                for bar in bars12:
-                    width = bar.get_width()
-                    ax12.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
-                ax12.set_xlabel('Número de publicaciones')
-                ax12.set_ylabel('Institución')
-                ax12.set_title(f'Top 10 Instituciones más Frecuentes')
-                ax12.invert_yaxis()
-                st.pyplot(fig12)
-            else:
-                st.warning("No se encontraron datos de instituciones.")
+                top_instituciones_df = pd.DataFrame(top_instituciones, columns=['Institución', 'Numero'])
+                if not top_instituciones_df.empty:
+                    # Intentar eliminar la primera fila si es un valor nulo/vacío
+                    if pd.isna(top_instituciones_df.iloc[0, 0]) or top_instituciones_df.iloc[0, 0].strip() == '':
+                         top_instituciones_df = top_instituciones_df.drop([0])
+                    
+                    fig12, ax12 = plt.subplots(figsize=(10, 6))
+                    bars12 = ax12.barh(top_instituciones_df['Institución'], top_instituciones_df['Numero'], color='green')
+                    for bar in bars12:
+                        width = bar.get_width()
+                        ax12.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+                    ax12.set_xlabel('Número de publicaciones')
+                    ax12.set_ylabel('Institución')
+                    ax12.set_title(f'Top 10 Instituciones más Frecuentes')
+                    ax12.invert_yaxis()
+                    
+                    # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+                    st.pyplot(fig12)
+                else:
+                    st.warning("No se encontraron datos de instituciones.")
+            except Exception as e:
+                st.error(f"Error al generar Gráfico 12 (Instituciones): {e}")
 
             # --- Gráfico 13: País ---
             st.subheader("País de publicación más frecuentes")
-            pais = dfScopus['Pais'].explode().dropna()
-            cuenta_pais = Counter(pais)
-            top_pais = cuenta_pais.most_common(10)
-            df_pais = pd.DataFrame(top_pais, columns=['Pais', 'Número de publicaciones'])
-            
-            fig13, ax13 = plt.subplots(figsize=(10, 6))
-            bars13 = ax13.barh(df_pais['Pais'], df_pais['Número de publicaciones'], color='red')
-            for bar in bars13:
-                width = bar.get_width()
-                ax13.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
-            ax13.set_xlabel('Número de publicaciones')
-            ax13.set_ylabel('País')
-            ax13.set_title(f'Top 10 Países más frecuentes')
-            ax13.invert_yaxis()
-            st.pyplot(fig13)
+            try:
+                pais = dfScopus['Pais'].explode().dropna()
+                cuenta_pais = Counter(pais)
+                top_pais = cuenta_pais.most_common(10)
+                df_pais = pd.DataFrame(top_pais, columns=['Pais', 'Número de publicaciones'])
+                
+                fig13, ax13 = plt.subplots(figsize=(10, 6))
+                bars13 = ax13.barh(df_pais['Pais'], df_pais['Número de publicaciones'], color='red')
+                for bar in bars13:
+                    width = bar.get_width()
+                    ax13.text(width, bar.get_y() + bar.get_height() / 2, f'{width}', ha='left', va='center')
+                ax13.set_xlabel('Número de publicaciones')
+                ax13.set_ylabel('País')
+                ax13.set_title(f'Top 10 Países más frecuentes')
+                ax13.invert_yaxis()
+                
+                # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+                st.pyplot(fig13)
+            except Exception as e:
+                st.error(f"Error al generar Gráfico 13 (País): {e}")
         
         else:
             st.warning("La columna 'Affiliations' no se encontró en el archivo CSV, se omiten los gráficos de Institución y País.")
@@ -486,77 +570,108 @@ if dfScopus_raw is not None:
         # --- Gráfico 14: Acceso Abierto ---
         with col1:
             st.subheader("Publicaciones de acceso abierto")
-            open_access_counts = dfScopus['OPENACCESS'].value_counts()
-            mylabels = ["No", "Si"]
-            
-            fig14, ax14 = plt.subplots(figsize=(6, 6))
-            if not open_access_counts.empty:
-                ax14.pie(open_access_counts, autopct='%1.1f%%', colors=['skyblue', 'red'], startangle=90, labels=mylabels)
-                ax14.set_title('(a) Publicaciones de acceso abierto')
-                ax14.legend()
-            st.pyplot(fig14)
+            try:
+                open_access_counts = dfScopus['OPENACCESS'].value_counts()
+                mylabels = ["No", "Si"]
+                
+                fig14, ax14 = plt.subplots(figsize=(6, 6))
+                if not open_access_counts.empty:
+                    ax14.pie(open_access_counts, autopct='%1.1f%%', colors=['skyblue', 'red'], startangle=90, labels=mylabels)
+                    ax14.set_title('(a) Publicaciones de acceso abierto')
+                    ax14.legend()
+                
+                # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+                st.pyplot(fig14)
+            except Exception as e:
+                st.error(f"Error al generar Gráfico 14 (Acceso Abierto): {e}")
+
 
         # --- Gráfico 15: Publicaciones con citaciones ---
         with col2:
             st.subheader("Publicaciones con citaciones")
-            conteo_publicaciones_citadas = dfScopus['Citado'].value_counts()
-            
-            fig15, ax15 = plt.subplots(figsize=(6, 6))
-            if not conteo_publicaciones_citadas.empty:
-                labels = conteo_publicaciones_citadas.keys()
-                ax15.pie(conteo_publicaciones_citadas, autopct='%1.1f%%', labels=labels)
-                ax15.set_title('(b) Publicaciones con citaciones')
-                ax15.legend()
-            st.pyplot(fig15)
+            try:
+                conteo_publicaciones_citadas = dfScopus['Citado'].value_counts()
+                
+                fig15, ax15 = plt.subplots(figsize=(6, 6))
+                if not conteo_publicaciones_citadas.empty:
+                    labels = conteo_publicaciones_citadas.keys()
+                    ax15.pie(conteo_publicaciones_citadas, autopct='%1.1f%%', labels=labels)
+                    ax15.set_title('(b) Publicaciones con citaciones')
+                    ax15.legend()
+                
+                # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+                st.pyplot(fig15)
+            except Exception as e:
+                st.error(f"Error al generar Gráfico 15 (Con Citaciones): {e}")
 
         st.divider()
 
         # --- Gráfico 16: Distribución de Citaciones (Log) ---
         st.subheader("Distribución de Citaciones (Escala Logarítmica)")
-        citation_counts = dfScopus['CITACIONES'].value_counts().sort_index()
-        fig16, ax16 = plt.subplots(figsize=(10, 6))
-        ax16.bar(citation_counts.index, citation_counts.values)
-        ax16.set_title('Distribución de Citaciones')
-        ax16.set_xlabel('Número de Citaciones')
-        ax16.set_ylabel('Frecuencia')
-        ax16.grid(True)
-        ax16.set_xscale('log') # Escala logarítmica
-        st.pyplot(fig16)
+        try:
+            citation_counts = dfScopus['CITACIONES'].value_counts().sort_index()
+            fig16, ax16 = plt.subplots(figsize=(10, 6))
+            ax16.bar(citation_counts.index, citation_counts.values)
+            ax16.set_title('Distribución de Citaciones')
+            ax16.set_xlabel('Número de Citaciones')
+            ax16.set_ylabel('Frecuencia')
+            ax16.grid(True)
+            ax16.set_xscale('log') # Escala logarítmica
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig16)
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 16 (Dist. Citaciones): {e}")
 
         # --- Gráfico 17: Boxplot Citaciones (Todas vs Review) ---
         st.subheader("Boxplot de Citaciones (Todas vs. Revisión)")
-        revision = dfScopus[dfScopus['TIPO'] == 'Review']
-        
-        fig17, ax17 = plt.subplots(figsize=(10, 6))
-        datos = [dfScopus['CITACIONES'], revision['CITACIONES']]
-        mylabels = ["Todas las publicaciones", "Publicaciones de revisión"]
-        bp = ax17.boxplot(datos, labels=mylabels, showfliers=False) # showfliers=False para imitar el notebook
-        
-        # Extraer medianas y etiquetarlas
-        medians = bp['medians']
-        for i, median in enumerate(medians):
-            value = median.get_ydata()[0]
-            ax17.text(i + 1, value, f'{value:.2f}', ha='center', va='bottom', color='black')
-        
-        ax17.set_ylabel('Número de Citaciones')
-        ax17.grid(True)
-        st.pyplot(fig17)
+        try:
+            revision = dfScopus[dfScopus['TIPO'] == 'Review']
+            
+            fig17, ax17 = plt.subplots(figsize=(10, 6))
+            datos = [dfScopus['CITACIONES'].dropna(), revision['CITACIONES'].dropna()]
+            mylabels = ["Todas las publicaciones", "Publicaciones de revisión"]
+            bp = ax17.boxplot(datos, labels=mylabels, showfliers=False) # showfliers=False para imitar el notebook
+            
+            # Extraer medianas y etiquetarlas
+            medians = bp['medians']
+            for i, median in enumerate(medians):
+                # Asegurarse de que hay datos en la mediana
+                if len(median.get_ydata()) > 0:
+                    value = median.get_ydata()[0]
+                    ax17.text(i + 1, value, f'{value:.2f}', ha='center', va='bottom', color='black')
+            
+            ax17.set_ylabel('Número de Citaciones')
+            ax17.grid(True)
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig17)
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 17 (Boxplot Citaciones): {e}")
+
 
         # --- Gráfico 18: Boxplot Citaciones por Año ---
         st.subheader("Boxplot de Citaciones por Año")
-        fig18, ax18 = plt.subplots(figsize=(10, 6))
-        datos_cpa = [dfScopus['Citaciones por año'].dropna()]
-        mylabels_cpa = ["Todas las publicaciones"]
-        bp_cpa = ax18.boxplot(datos_cpa, labels=mylabels_cpa, showfliers=False)
-        
-        medians_cpa = bp_cpa['medians']
-        for i, median in enumerate(medians_cpa):
-            value = median.get_ydata()[0]
-            ax18.text(i + 1, value, f'{value:.2f}', ha='center', va='bottom', color='black')
-        
-        ax18.set_ylabel('Número de Citaciones por Año')
-        ax18.grid(True)
-        st.pyplot(fig18)
+        try:
+            fig18, ax18 = plt.subplots(figsize=(10, 6))
+            datos_cpa = [dfScopus['Citaciones por año'].dropna()]
+            mylabels_cpa = ["Todas las publicaciones"]
+            bp_cpa = ax18.boxplot(datos_cpa, labels=mylabels_cpa, showfliers=False)
+            
+            medians_cpa = bp_cpa['medians']
+            if medians_cpa:
+                for i, median in enumerate(medians_cpa):
+                    if len(median.get_ydata()) > 0:
+                        value = median.get_ydata()[0]
+                        ax18.text(i + 1, value, f'{value:.2f}', ha='center', va='bottom', color='black')
+            
+            ax18.set_ylabel('Número de Citaciones por Año')
+            ax18.grid(True)
+            
+            # --- ¡CORRECCIÓN! Usar st.pyplot() ---
+            st.pyplot(fig18)
+        except Exception as e:
+            st.error(f"Error al generar Gráfico 18 (Boxplot Cit./Año): {e}")
 
 
     # ==================================================================
@@ -568,11 +683,14 @@ if dfScopus_raw is not None:
         # --- Búsqueda por Autor ---
         st.subheader(f"Resultados de búsqueda para: '{search_string}'")
         if search_string:
-            results = dfScopus[dfScopus['AUTORES'].str.contains(search_string, na=False)]
-            columnas_a_extraer = ['TITULO', 'AUTORES', 'CITACIONES']
-            results1 = results[columnas_a_extraer]
-            results2 = results1.sort_values(by='CITACIONES', ascending=False)
-            st.dataframe(results2.head(30))
+            try:
+                results = dfScopus[dfScopus['AUTORES'].str.contains(search_string, na=False)]
+                columnas_a_extraer = ['TITULO', 'AUTORES', 'CITACIONES']
+                results1 = results[columnas_a_extraer]
+                results2 = results1.sort_values(by='CITACIONES', ascending=False)
+                st.dataframe(results2.head(30))
+            except Exception as e:
+                st.error(f"Error al buscar autor: {e}")
         else:
             st.info("Escribe un nombre de autor en el panel lateral izquierdo para buscar.")
 
