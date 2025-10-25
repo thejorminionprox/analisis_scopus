@@ -201,7 +201,8 @@ if dfScopus_raw is not None:
         st.subheader("Limpieza de Palabras Clave")
         st.metric("Registros antes de limpiar 'ALLKEYWORDS'", longitudactual)
         st.metric("Registros después de limpiar 'ALLKEYWORDS'", longitudnueva)
-        st.metric("Registros eliminados (sin palabras clave)", contadorborrado, delta_type="inverse")
+        # --- ¡CORRECCIÓN! El parámetro correcto es 'delta_color', no 'delta_type' ---
+        st.metric("Registros eliminados (sin palabras clave)", contadorborrado, delta_color="inverse")
 
 
     # --- Pestañas de Visualización ---
@@ -724,4 +725,5 @@ if dfScopus_raw is not None:
 else:
     st.warning("La aplicación no puede continuar porque el archivo de datos no se ha cargado.")
     st.info("Asegúrate de que el archivo 'scopusffandhkorwtorhf.csv' esté en tu repositorio de GitHub.")
+
 
