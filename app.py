@@ -10,22 +10,9 @@ import math as mt
 import sys
 import io # Para capturar el output de df.info()
 from datetime import datetime
-import networkx as nx
-from wordcloud import WordCloud
-import re
-from nltk.corpus import stopwords
-import nltk
-from nltk.stem.wordnet import WordNetLemmatizer
-from tqdm import tqdm
-import time
-import os
-import logging
 from collections import Counter
 import warnings
-import matplotlib.ticker as mtick
-import matplotlib as mpl
-from matplotlib.ticker import PercentFormatter
-from matplotlib.pyplot import figure
+from wordcloud import WordCloud
 
 # Ignorar todos los warnings como en tu notebook
 warnings.filterwarnings("ignore")
@@ -214,8 +201,28 @@ if data_source == "Usar datos de ejemplo":
     dfScopus_raw = load_sample_data(DATA_FILE)
     
 else:
+    # --- AQUÍ COMIENZAN LOS CAMBIOS SOLICITADOS ---
+    
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Rúbrica para la Base de Datos")
+    st.sidebar.info(
+        "**Importante:** Para que el análisis funcione, asegúrate de que tu archivo CSV "
+        "cumpla con los requisitos mostrados en la siguiente imagen:"
+    )
+    
+    # Mostramos la imagen indicando que son los requisitos/rúbrica
+    # Asegúrate de que 'image_292efe.png' esté en la misma carpeta que tu script
+    try:
+        st.sidebar.image("image_292efe.png", caption="Figura 1. Campos requeridos en Scopus", use_container_width=True)
+    except:
+        st.sidebar.warning("No se pudo cargar la imagen de la rúbrica (image_292efe.png).")
+
+    st.sidebar.markdown("---")
+    
     # Muestra el widget para subir archivos
     uploaded_file = st.sidebar.file_uploader("Carga tu archivo CSV de Scopus:", type=["csv"])
+    
+    # --- FIN DE LOS CAMBIOS ---
     
     if uploaded_file is not None:
         try:
@@ -225,8 +232,6 @@ else:
         except Exception as e:
             st.error(f"Error al leer el archivo CSV: {e}")
             st.warning("Asegúrate de que el archivo CSV tenga el formato correcto de Scopus.")
-
-# --- FIN DE NUEVA SECCIÓN ---
 
 
 # Solo si el archivo se cargó correctamente (de ejemplo o subido), continúa con el análisis
