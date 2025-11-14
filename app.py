@@ -145,16 +145,21 @@ if data_source == "Usar datos de ejemplo":
     dfScopus_raw = load_sample_data(DATA_FILE)
     
 else:
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Rúbrica para la Base de Datos")
-    st.sidebar.info("Asegúrate de que tu archivo CSV cumpla con los requisitos:")
+    # --- CAMBIO: Imagen y descripción en el CENTRO de la página ---
+    st.info(
+        "ℹ️ **Instrucciones:** Para utilizar tu propia base de datos, el archivo CSV debe tener una estructura específica. "
+        "La siguiente imagen muestra los campos (columnas) requeridos para que el análisis funcione correctamente."
+    )
     
     try:
-        st.sidebar.image("image_292efe.png", caption="Figura 1. Campos requeridos en Scopus", use_container_width=True)
+        # Se muestra la imagen en el contenedor principal
+        st.image("image_292efe.png", caption="Rúbrica: Campos necesarios en la base de datos de Scopus", use_container_width=True)
     except:
-        st.sidebar.warning("No se pudo cargar la imagen de la rúbrica.")
+        st.warning("No se pudo cargar la imagen de referencia.")
+    
+    st.markdown("---")
+    # --------------------------------------------------------------
 
-    st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Carga tu archivo CSV de Scopus:", type=["csv"])
     
     if uploaded_file is not None:
@@ -481,4 +486,10 @@ if dfScopus_raw is not None:
     with st.expander("Ver DataFrame Completo"):
         st.dataframe(dfScopus)
 else:
-    st.info("Selecciona una fuente de datos para comenzar.")
+    if data_source == "Subir mi propio archivo CSV" and uploaded_file is None:
+        # Mensaje vacío porque ya mostramos la imagen y las instrucciones arriba
+        pass
+    elif data_source == "Usar datos de ejemplo":
+         st.info("Cargando datos de ejemplo...")
+    else:
+         st.info("Sube un archivo para comenzar.")
