@@ -341,8 +341,7 @@ else:
     st.info(t['info_instructions'])
     
     try:
-        # CORRECCIÓN: Se usa el nombre de archivo 'image_ff8c45.jpg'
-        img = Image.open("image_ff8c45.jpg") 
+        img = Image.open("image_298efe.png") 
         width, height = img.size
         pixeles_a_cortar = 50 
         crop_coords = (0, 0, width, height - pixeles_a_cortar)
@@ -750,3 +749,4 @@ else:
             st.info(t['info_loading_sample'])
     else:
         st.info(t['info_upload_prompt'])
+
