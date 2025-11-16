@@ -28,7 +28,7 @@ translations = {
         'upload_error': "Error al leer el archivo CSV: {e}",
         'info_instructions': "Para utilizar tu propia base de datos, el archivo CSV debe tener una estructura específica que contenga campos como Autores, Título, Año, Citaciones, Palabras clave, Tipo de Documento y Afiliaciones.",
         'image_caption': "Campos necesarios en la base de datos de Scopus",
-        'warning_image_load': "No se pudo cargar la imagen de referencia 'image_ff8c45.jpg'.",
+        'warning_image_load': "No se pudo cargar la imagen de referencia 'image_292efe.png'.",
         'processing_data': "Procesando datos...",
         'sidebar_header_filters': "Filtros Interactivos",
         'slider_top_authors': "Top Autores Frecuentes:",
@@ -116,7 +116,7 @@ translations = {
         'upload_error': "Error reading CSV file: {e}",
         'info_instructions': "To use your own database, the CSV file must have a specific structure containing fields like Authors, Title, Year, Citations, Keywords, Document Type, and Affiliations.",
         'image_caption': "Required fields in the Scopus database",
-        'warning_image_load': "Could not load reference image 'image_ff8c45.jpg'.",
+        'warning_image_load': "Could not load reference image 'image_292efe.png'.",
         'processing_data': "Processing data...",
         'sidebar_header_filters': "Interactive Filters",
         'slider_top_authors': "Top Frequent Authors:",
@@ -341,18 +341,22 @@ else:
     st.info(t['info_instructions'])
     
     try:
-        img = Image.open("image_298efe.png") 
+        # Se usa el nombre de archivo de tu repositorio: image_292efe.png
+        img = Image.open("image_292efe.png") 
         width, height = img.size
+        
+        # Ajusta este valor si es necesario
         pixeles_a_cortar = 50 
+        
         crop_coords = (0, 0, width, height - pixeles_a_cortar)
         cropped_img = img.crop(crop_coords)
         st.image(cropped_img, caption=t['image_caption'], use_container_width=True)
 
     except FileNotFoundError:
-        # CORRECCIÓN: Se actualiza el mensaje de error
+        # El mensaje de error ahora usa el nombre de archivo correcto
         st.warning(t['warning_image_load']) 
     except Exception as e:
-        st.warning(f"No se pudo cargar o recortar la imagen 'image_ff8c45.jpg': {e}")
+        st.warning(f"No se pudo cargar o recortar la imagen 'image_292efe.png': {e}")
     
     st.markdown("---")
 
@@ -565,7 +569,6 @@ if dfScopus_raw is not None:
                 palabras_titulo = dfScopus['TITULO'].dropna().str.lower().str.cat(sep=';').split(' ')
                 cuenta_palabras_titulo = Counter(palabras_titulo)
                 
-                # --- CORRECCIÓN DE SYNTAX ERROR ---
                 palabras_df = pd.DataFrame(cuenta_palabras_titulo.most_common(), columns=['Palabra', 'Numero'])
                 palabras_df = palabras_df[(palabras_df['Palabra'].str.len() > 3) & (palabras_df['Numero'] > 40)]
                 stop_words = ['from', 'with', 'research', 'analysis', 'using', 'based', 'model', 'control', 'between', 'study']
@@ -577,7 +580,6 @@ if dfScopus_raw is not None:
                     fig10, ax10 = plt.subplots(figsize=(10, altura_dinamica_10))
                     
                     bars10 = ax10.barh(palabras_df['Palabra'], palabras_df['Numero'], color='red')
-                    # --- FIN DE CORRECCIÓN ---
 
                     ax10.invert_yaxis()
                     st.pyplot(fig10)
@@ -749,4 +751,3 @@ else:
             st.info(t['info_loading_sample'])
     else:
         st.info(t['info_upload_prompt'])
-
