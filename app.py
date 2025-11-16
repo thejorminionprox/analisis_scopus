@@ -207,7 +207,13 @@ if dfScopus_raw is not None:
             if not autores.empty:
                 cuentauores = Counter(autores)
                 top_autores_df = pd.DataFrame(cuentauores.most_common(CantidadAutores), columns=['Author', 'Count'])
-                fig1, ax1 = plt.subplots(figsize=(10, 6))
+                
+                # --- MODIFICACIÓN ---
+                # Altura dinámica: 0.4 pulgadas por barra, con un mínimo de 6
+                altura_dinamica_1 = max(6, len(top_autores_df) * 0.4)
+                fig1, ax1 = plt.subplots(figsize=(10, altura_dinamica_1))
+                # --- FIN MODIFICACIÓN ---
+                
                 bars1 = ax1.barh(top_autores_df['Author'], top_autores_df['Count'], color='skyblue')
                 ax1.set_title(f'Top {CantidadAutores} Autores más Frecuentes')
                 ax1.invert_yaxis()
@@ -225,7 +231,12 @@ if dfScopus_raw is not None:
             if not autorescompletos.empty:
                 cuentaautorescompletos = Counter(autorescompletos)
                 top_autores_completos_df = pd.DataFrame(cuentaautorescompletos.most_common(CantidadAutores), columns=['Author', 'Count'])
-                fig2, ax2 = plt.subplots(figsize=(10, 6))
+                
+                # --- MODIFICACIÓN ---
+                altura_dinamica_2 = max(6, len(top_autores_completos_df) * 0.4)
+                fig2, ax2 = plt.subplots(figsize=(10, altura_dinamica_2))
+                # --- FIN MODIFICACIÓN ---
+                
                 bars2 = ax2.barh(top_autores_completos_df['Author'], top_autores_completos_df['Count'], color='lightgreen')
                 ax2.set_title(f'Top {CantidadAutores} Autores (Nombres Completos)')
                 ax2.invert_yaxis()
@@ -260,6 +271,12 @@ if dfScopus_raw is not None:
                 bars4 = pubporanio.plot(kind='bar', color='peru', ax=ax4)
                 for bar in bars4.containers[0]:
                     ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height(), f'{bar.get_height()}', ha='center', va='bottom')
+                
+                # --- MODIFICACIÓN ---
+                plt.xticks(rotation=45, ha='right') # Rotar etiquetas
+                plt.tight_layout() # Ajustar para que no se corten
+                # --- FIN MODIFICACIÓN ---
+                
                 st.pyplot(fig4)
         except Exception as e:
             st.error(f"Error: {e}")
@@ -291,6 +308,11 @@ if dfScopus_raw is not None:
                     for bar in bars6.containers[0]:
                         ax6.text(bar.get_x() + bar.get_width()/2, bar.get_height(), f'{bar.get_height()}', ha='center', va='bottom')
                     plt.xticks(rotation=45, ha='right')
+                    
+                    # --- MODIFICACIÓN ---
+                    plt.tight_layout() # Ajustar para que no se corten
+                    # --- FIN MODIFICACIÓN ---
+                    
                     st.pyplot(fig6)
         except Exception as e:
             st.error(f"Error: {e}")
@@ -314,7 +336,12 @@ if dfScopus_raw is not None:
             if keyword_counts:
                 st.subheader(f"Top {CantidadPalabrasClave} Palabras clave")
                 top_keywords_df = pd.DataFrame(keyword_counts.most_common(CantidadPalabrasClave), columns=['Keyword', 'Count'])
-                fig8, ax8 = plt.subplots(figsize=(10, 8))
+                
+                # --- MODIFICACIÓN ---
+                altura_dinamica_8 = max(8, len(top_keywords_df) * 0.4)
+                fig8, ax8 = plt.subplots(figsize=(10, altura_dinamica_8))
+                # --- FIN MODIFICACIÓN ---
+                
                 bars8 = ax8.barh(top_keywords_df['Keyword'], top_keywords_df['Count'], color='salmon')
                 ax8.invert_yaxis()
                 for bar in bars8:
@@ -343,7 +370,14 @@ if dfScopus_raw is not None:
                 palabras_df = palabras_df[~palabras_df['Palabra'].isin(stop_words)]
 
                 if not palabras_df.empty:
-                    fig10, ax10 = plt.subplots(figsize=(10, 8))
+                    
+                    # --- MODIFICACIÓN ---
+                    # Esta es la gráfica de la imagen. Hacemos la altura dinámica.
+                    # 0.35 pulgadas por palabra, con un mínimo de 8.
+                    altura_dinamica_10 = max(8, len(palabras_df) * 0.35)
+                    fig10, ax10 = plt.subplots(figsize=(10, altura_dinamica_10))
+                    # --- FIN MODIFICACIÓN ---
+                    
                     bars10 = ax10.barh(palabras_df['Palabra'], palabras_df['Numero'], color='red')
                     ax10.invert_yaxis()
                     st.pyplot(fig10)
@@ -363,6 +397,11 @@ if dfScopus_raw is not None:
                         ax11.text(bar.get_x() + bar.get_width()/2, bar.get_height(), f'{bar.get_height()}', ha='center', va='bottom')
                     labels = [' '.join(str(l).split()[:5]) for l in source_counts.index]
                     ax11.set_xticklabels(labels, rotation=45, ha='right')
+                    
+                    # --- MODIFICACIÓN ---
+                    plt.tight_layout() # Ajustar para que no se corten
+                    # --- FIN MODIFICACIÓN ---
+                    
                     st.pyplot(fig11)
         except Exception as e:
             st.error(f"Error: {e}")
@@ -374,7 +413,12 @@ if dfScopus_raw is not None:
                 top_inst = pd.DataFrame(Counter(instituciones).most_common(11), columns=['Institución', 'Numero'])
                 if not top_inst.empty:
                     if pd.isna(top_inst.iloc[0, 0]) or top_inst.iloc[0, 0].strip() == '': top_inst = top_inst.drop([0])
-                    fig12, ax12 = plt.subplots(figsize=(10, 6))
+                    
+                    # --- MODIFICACIÓN ---
+                    altura_dinamica_12 = max(6, len(top_inst) * 0.4)
+                    fig12, ax12 = plt.subplots(figsize=(10, altura_dinamica_12))
+                    # --- FIN MODIFICACIÓN ---
+                    
                     bars12 = ax12.barh(top_inst['Institución'], top_inst['Numero'], color='green')
                     ax12.invert_yaxis()
                     for bar in bars12:
@@ -388,7 +432,12 @@ if dfScopus_raw is not None:
                 pais = dfScopus['Pais'].explode().dropna()
                 if not pais.empty:
                     top_pais = pd.DataFrame(Counter(pais).most_common(10), columns=['Pais', 'Numero'])
-                    fig13, ax13 = plt.subplots(figsize=(10, 6))
+                    
+                    # --- MODIFICACIÓN ---
+                    altura_dinamica_13 = max(6, len(top_pais) * 0.4)
+                    fig13, ax13 = plt.subplots(figsize=(10, altura_dinamica_13))
+                    # --- FIN MODIFICACIÓN ---
+                    
                     bars13 = ax13.barh(top_pais['Pais'], top_pais['Numero'], color='red')
                     ax13.invert_yaxis()
                     for bar in bars13:
@@ -490,6 +539,6 @@ else:
         # Mensaje vacío porque ya mostramos la imagen y las instrucciones arriba
         pass
     elif data_source == "Usar datos de ejemplo":
-         st.info("Cargando datos de ejemplo...")
+        st.info("Cargando datos de ejemplo...")
     else:
-         st.info("Sube un archivo para comenzar.")
+        st.info("Sube un archivo para comenzar.")
