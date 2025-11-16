@@ -13,6 +13,181 @@ from wordcloud import WordCloud
 
 warnings.filterwarnings("ignore")
 
+translations = {
+    'es': {
+        'page_title': "Análisis de Scopus",
+        'main_title': "Análisis Interactivo de Publicaciones de Scopus",
+        'app_description': "Esta aplicación analiza un conjunto de datos de Scopus.",
+        'sidebar_header_source': "Fuente de Datos",
+        'radio_source_prompt': "Elige una fuente de datos:",
+        'radio_source_option_1': "Usar datos de ejemplo",
+        'radio_source_option_2': "Subir mi propio archivo CSV",
+        'upload_prompt': "Carga tu archivo CSV de Scopus:",
+        'upload_success': "¡Archivo cargado exitosamente!",
+        'upload_error': "Error al leer el archivo CSV: {e}",
+        'info_instructions': "**Instrucciones:** Para utilizar tu propia base de datos, el archivo CSV debe tener una estructura específica. La siguiente imagen muestra los campos (columnas) requeridos para que el análisis funcione correctamente.",
+        'image_caption': "Rúbrica: Campos necesarios en la base de datos de Scopus",
+        'warning_image_load': "No se pudo cargar la imagen de referencia.",
+        'processing_data': "Procesando datos...",
+        'sidebar_header_filters': "Filtros Interactivos",
+        'slider_top_authors': "Top Autores Frecuentes:",
+        'slider_top_keywords': "Top Palabras Clave Frecuentes:",
+        'slider_top_sources': "Top Fuentes Comunes:",
+        'text_search_author': "Buscar Autor (ej. Lauder G.):",
+        'expander_processing_summary': "Ver Resumen del Procesamiento",
+        'info_header': "Información del DataFrame",
+        'keywords_cleaning_header': "Limpieza de Palabras Clave",
+        'metric_before': "Registros antes",
+        'metric_after': "Registros después",
+        'metric_removed': "Eliminados",
+        'tab_names': [
+            "Análisis de Autores", 
+            "Análisis de Publicaciones", 
+            "Análisis de Palabras Clave", 
+            "Fuentes y Afiliación", 
+            "Análisis de Citaciones",
+            "Búsqueda y Rankings"
+        ],
+        'tab1_header': "Análisis de Autores",
+        'tab1_subheader_top_authors_short': "Top {count} Autores (Formato Corto)",
+        'tab1_plot_title_top_authors_short': "Top {count} Autores más Frecuentes",
+        'tab1_subheader_top_authors_full': "Top {count} Autores (Nombre Completo)",
+        'tab1_plot_title_top_authors_full': "Top {count} Autores (Nombres Completos)",
+        'tab1_subheader_authors_per_pub': "Número de autores por publicación",
+        'tab1_plot_title_authors_per_pub': "Número de autores por publicación",
+        'tab1_plot_xlabel_authors_per_pub': "Número de autores",
+        'tab1_plot_ylabel_authors_per_pub': "Publicaciones",
+        'warning_no_data': "No hay datos.",
+        'tab2_header': "Análisis de Publicaciones",
+        'tab2_subheader_pub_by_year': "Distribución de publicaciones por año",
+        'tab2_subheader_pub_by_year_cumulative': "Publicaciones acumuladas por año",
+        'tab2_plot_label_yearly': "Por año",
+        'tab2_plot_label_cumulative': "Acumulado",
+        'tab2_subheader_doc_types': "Distribución de Tipos de Documentos",
+        'tab2_subheader_title_chars': "Distribución de Caracteres en el Título",
+        'tab3_header': "Análisis de Palabras Clave",
+        'tab3_subheader_top_keywords': "Top {count} Palabras clave",
+        'tab3_subheader_word_cloud': "Nube de Palabras",
+        'tab3_warning_no_keywords': "No hay palabras clave.",
+        'tab3_subheader_title_words': "Frecuencia de palabras en el título",
+        'tab4_header': "Análisis de Fuentes y Afiliación",
+        'tab4_subheader_top_sources': "Top {count} Fuentes de publicación",
+        'tab4_subheader_top_institutions': "Instituciones más Frecuentes",
+        'tab4_subheader_top_countries': "Países más frecuentes",
+        'tab4_warning_no_affiliation_data': "Sin datos de afiliación.",
+        'tab5_header': "Análisis de Citaciones",
+        'tab5_subheader_open_access': "Acceso Abierto",
+        'tab5_pie_label_no': "No",
+        'tab5_pie_label_yes': "Si",
+        'tab5_subheader_cited_pubs': "Publicaciones con citaciones",
+        'tab5_subheader_citation_dist': "Distribución de Citaciones (Log)",
+        'tab5_subheader_boxplot_citations': "Boxplot Citaciones (Todas vs Review)",
+        'tab5_boxplot_label_all': "Todas",
+        'tab5_boxplot_label_review': "Review",
+        'tab5_subheader_boxplot_citations_per_year': "Boxplot Citaciones por Año",
+        'tab6_header': "Búsqueda y Rankings",
+        'tab6_subheader_search_results': "Búsqueda: '{query}'",
+        'tab6_subheader_top_impact_general': "Top Impacto (General)",
+        'tab6_subheader_top_impact_review': "Top Impacto (Review)",
+        'tab6_subheader_top_impact_cites_per_year': "Top Impacto (Cit./Año)",
+        'expander_full_dataframe': "Ver DataFrame Completo",
+        'info_loading_sample': "Cargando datos de ejemplo...",
+        'info_upload_prompt': "Sube un archivo para comenzar.",
+        'error_filenotfound': "Error: No se encontró el archivo '{file}'.",
+        'warning_authors_not_found': "Columna 'Authors' no encontrada.",
+        'warning_year_not_found': "Columna 'Year' no encontrada.",
+        'warning_affiliations_not_found': "Columna 'Affiliations' no encontrada.",
+        'cited_yes': 'Si',
+        'cited_no': 'No'
+    },
+    'en': {
+        'page_title': "Scopus Analysis",
+        'main_title': "Interactive Scopus Publication Analysis",
+        'app_description': "This application analyzes a Scopus dataset.",
+        'sidebar_header_source': "Data Source",
+        'radio_source_prompt': "Choose a data source:",
+        'radio_source_option_1': "Use sample data",
+        'radio_source_option_2': "Upload my own CSV file",
+        'upload_prompt': "Upload your Scopus CSV file:",
+        'upload_success': "File uploaded successfully!",
+        'upload_error': "Error reading CSV file: {e}",
+        'info_instructions': "**Instructions:** To use your own database, the CSV file must have a specific structure. The following image shows the required fields (columns) for the analysis to work correctly.",
+        'image_caption': "Rubric: Required fields in the Scopus database",
+        'warning_image_load': "Could not load reference image.",
+        'processing_data': "Processing data...",
+        'sidebar_header_filters': "Interactive Filters",
+        'slider_top_authors': "Top Frequent Authors:",
+        'slider_top_keywords': "Top Frequent Keywords:",
+        'slider_top_sources': "Top Common Sources:",
+        'text_search_author': "Search Author (e.g., Lauder G.):",
+        'expander_processing_summary': "View Processing Summary",
+        'info_header': "DataFrame Information",
+        'keywords_cleaning_header': "Keyword Cleaning",
+        'metric_before': "Records before",
+        'metric_after': "Records after",
+        'metric_removed': "Removed",
+        'tab_names': [
+            "Author Analysis", 
+            "Publication Analysis", 
+            "Keyword Analysis", 
+            "Sources & Affiliation", 
+            "Citation Analysis",
+            "Search & Rankings"
+        ],
+        'tab1_header': "Author Analysis",
+        'tab1_subheader_top_authors_short': "Top {count} Authors (Short Format)",
+        'tab1_plot_title_top_authors_short': "Top {count} Most Frequent Authors",
+        'tab1_subheader_top_authors_full': "Top {count} Authors (Full Name)",
+        'tab1_plot_title_top_authors_full': "Top {count} Authors (Full Names)",
+        'tab1_subheader_authors_per_pub': "Number of authors per publication",
+        'tab1_plot_title_authors_per_pub': "Number of authors per publication",
+        'tab1_plot_xlabel_authors_per_pub': "Number of authors",
+        'tab1_plot_ylabel_authors_per_pub': "Publications",
+        'warning_no_data': "No data available.",
+        'tab2_header': "Publication Analysis",
+        'tab2_subheader_pub_by_year': "Distribution of publications by year",
+        'tab2_subheader_pub_by_year_cumulative': "Cumulative publications by year",
+        'tab2_plot_label_yearly': "By year",
+        'tab2_plot_label_cumulative': "Cumulative",
+        'tab2_subheader_doc_types': "Distribution of Document Types",
+        'tab2_subheader_title_chars': "Distribution of Characters in Title",
+        'tab3_header': "Keyword Analysis",
+        'tab3_subheader_top_keywords': "Top {count} Keywords",
+        'tab3_subheader_word_cloud': "Word Cloud",
+        'tab3_warning_no_keywords': "No keywords available.",
+        'tab3_subheader_title_words': "Frequency of words in title",
+        'tab4_header': "Source and Affiliation Analysis",
+        'tab4_subheader_top_sources': "Top {count} Publication Sources",
+        'tab4_subheader_top_institutions': "Most Frequent Institutions",
+        'tab4_subheader_top_countries': "Most Frequent Countries",
+        'tab4_warning_no_affiliation_data': "No affiliation data.",
+        'tab5_header': "Citation Analysis",
+        'tab5_subheader_open_access': "Open Access",
+        'tab5_pie_label_no': "No",
+        'tab5_pie_label_yes': "Yes",
+        'tab5_subheader_cited_pubs': "Publications with citations",
+        'tab5_subheader_citation_dist': "Distribution of Citations (Log)",
+        'tab5_subheader_boxplot_citations': "Boxplot Citations (All vs Review)",
+        'tab5_boxplot_label_all': "All",
+        'tab5_boxplot_label_review': "Review",
+        'tab5_subheader_boxplot_citations_per_year': "Boxplot Citations per Year",
+        'tab6_header': "Search and Rankings",
+        'tab6_subheader_search_results': "Search: '{query}'",
+        'tab6_subheader_top_impact_general': "Top Impact (General)",
+        'tab6_subheader_top_impact_review': "Top Impact (Review)",
+        'tab6_subheader_top_impact_cites_per_year': "Top Impact (Cites/Year)",
+        'expander_full_dataframe': "View Full DataFrame",
+        'info_loading_sample': "Loading sample data...",
+        'info_upload_prompt': "Upload a file to start.",
+        'error_filenotfound': "Error: File '{file}' not found.",
+        'warning_authors_not_found': "'Authors' column not found.",
+        'warning_year_not_found': "'Year' column not found.",
+        'warning_affiliations_not_found': "'Affiliations' column not found.",
+        'cited_yes': 'Yes',
+        'cited_no': 'No'
+    }
+}
+
 def ClasificadorAcceso(dato):
     if isinstance(dato, str):
         if 'Open Access' in dato:
@@ -29,16 +204,16 @@ def ContarAutores(dato):
         return 0
 
 @st.cache_data
-def load_sample_data(file_path):
+def load_sample_data(file_path, t_error_string):
     try:
         df = pd.read_csv(file_path)
         return df
     except FileNotFoundError:
-        st.error(f"Error: No se encontró el archivo '{file_path}'.")
+        st.error(t_error_string.format(file=file_path))
         return None
 
 @st.cache_data
-def process_data(df_raw):
+def process_data(df_raw, t_strings):
     if df_raw is None:
         return None, 0, 0, 0
         
@@ -66,7 +241,7 @@ def process_data(df_raw):
         dfScopus['LISTAUTORES'] = dfScopus['AUTORES'].str.split('; ')
         dfScopus['CANTIDADAUTORES'] = dfScopus['LISTAUTORES'].apply(ContarAutores)
     else:
-        st.warning("Columna 'Authors' no encontrada.")
+        st.warning(t_strings['warning_authors_not_found'])
         dfScopus['LISTAUTORES'] = [[]] * len(dfScopus)
         dfScopus['CANTIDADAUTORES'] = 0
 
@@ -78,7 +253,7 @@ def process_data(df_raw):
     if 'ANIO' in dfScopus.columns:
         dfScopus['ANIO'] = pd.to_numeric(dfScopus['ANIO'], errors='coerce')
     else:
-        st.warning("Columna 'Year' no encontrada.")
+        st.warning(t_strings['warning_year_not_found'])
         dfScopus['ANIO'] = np.nan
 
     if 'PCLAVEA' not in dfScopus.columns: dfScopus['PCLAVEA'] = ''
@@ -95,11 +270,12 @@ def process_data(df_raw):
     current_year = datetime.now().year
     if 'CITACIONES' in dfScopus.columns and 'ANIO' in dfScopus.columns:
         dfScopus['Citaciones por año'] = dfScopus['CITACIONES'] / (current_year + 1 - dfScopus['ANIO'])
-        dfScopus['Citado'] = np.where(dfScopus['CITACIONES'] > 0, 'Si', 'No')
+        # Usamos los strings de t_strings
+        dfScopus['Citado'] = np.where(dfScopus['CITACIONES'] > 0, t_strings['cited_yes'], t_strings['cited_no'])
     else:
         dfScopus['CITACIONES'] = 0
         dfScopus['Citaciones por año'] = 0
-        dfScopus['Citado'] = 'No'
+        dfScopus['Citado'] = t_strings['cited_no']
 
     if 'Affiliations' in df_raw.columns:
         dfScopus['Afilaciones'] = df_raw['Affiliations'].str.split('; ')
@@ -108,7 +284,7 @@ def process_data(df_raw):
         dfScopus['Pais'] = dfScopus['Pais'].replace('States', 'USA')
         dfScopus['Pais'] = dfScopus['Pais'].replace('Kingdom', 'United Kingdom')
     else:
-        st.warning("Columna 'Affiliations' no encontrada.")
+        st.warning(t_strings['warning_affiliations_not_found'])
         dfScopus['Afilaciones'] = [[]] * len(dfScopus)
         dfScopus['Pais'] = [None] * len(dfScopus)
 
@@ -126,79 +302,87 @@ def process_data(df_raw):
     
     return dfScopus, longitudactual, longitudnueva, contadorborrado
 
-st.set_page_config(page_title="Análisis de Scopus", layout="wide")
-st.title("Análisis Interactivo de Publicaciones de Scopus")
-st.write("Esta aplicación analiza un conjunto de datos de Scopus.")
+selected_lang_label = st.sidebar.selectbox(
+    "Idioma / Language", 
+    ("Español", "English")
+)
+lang_map = {"Español": "es", "English": "en"}
+lang_key = lang_map[selected_lang_label]
+
+t = translations[lang_key]
+
+st.set_page_config(page_title=t['page_title'], layout="wide")
+st.title(t['main_title'])
+st.write(t['app_description'])
 
 DATA_FILE = "scopusffandhkorwtorhf.csv"
 
-st.sidebar.header("Fuente de Datos")
+st.sidebar.header(t['sidebar_header_source'])
 data_source = st.sidebar.radio(
-    "Elige una fuente de datos:",
-    ("Usar datos de ejemplo", "Subir mi propio archivo CSV")
+    t['radio_source_prompt'],
+    (t['radio_source_option_1'], t['radio_source_option_2'])
 )
 
 dfScopus_raw = None
 uploaded_file = None
 
-if data_source == "Usar datos de ejemplo":
-    dfScopus_raw = load_sample_data(DATA_FILE)
+if data_source == t['radio_source_option_1']:
+    dfScopus_raw = load_sample_data(DATA_FILE, t['error_filenotfound'])
     
 else:
-    st.info(
-        "**Instrucciones:** Para utilizar tu propia base de datos, el archivo CSV debe tener una estructura específica. "
-        "La siguiente imagen muestra los campos (columnas) requeridos para que el análisis funcione correctamente."
-    )
+    st.info(t['info_instructions'])
     
     try:
-        st.image("image_292efe.png", caption="Rúbrica: Campos necesarios en la base de datos de Scopus", use_container_width=True)
+        st.image("image_292efe.png", caption=t['image_caption'], use_container_width=True)
     except:
-        st.warning("No se pudo cargar la imagen de referencia.")
+        st.warning(t['warning_image_load'])
     
     st.markdown("---")
 
-    uploaded_file = st.sidebar.file_uploader("Carga tu archivo CSV de Scopus:", type=["csv"])
+    uploaded_file = st.sidebar.file_uploader(t['upload_prompt'], type=["csv"])
     
     if uploaded_file is not None:
         try:
             dfScopus_raw = pd.read_csv(uploaded_file)
-            st.sidebar.success("¡Archivo cargado exitosamente!")
+            st.sidebar.success(t['upload_success'])
         except Exception as e:
-            st.error(f"Error al leer el archivo CSV: {e}")
+            st.error(t['upload_error'].format(e=e))
 
 if dfScopus_raw is not None:
-    with st.spinner("Procesando datos..."):
-        dfScopus, longitudactual, longitudnueva, contadorborrado = process_data(dfScopus_raw)
 
-    st.sidebar.header("Filtros Interactivos")
+    t_process_strings = {
+        'warning_authors_not_found': t['warning_authors_not_found'],
+        'warning_year_not_found': t['warning_year_not_found'],
+        'warning_affiliations_not_found': t['warning_affiliations_not_found'],
+        'cited_yes': t['cited_yes'],
+        'cited_no': t['cited_no']
+    }
 
-    CantidadAutores = st.sidebar.slider("Top Autores Frecuentes:", 5, 50, 10, 5)
-    CantidadPalabrasClave = st.sidebar.slider("Top Palabras Clave Frecuentes:", 5, 50, 20, 5)
-    CantidadFuentes = st.sidebar.slider("Top Fuentes Comunes:", 5, 50, 10, 5)
-    search_string = st.sidebar.text_input("Buscar Autor (ej. Lauder G.):", "Lauder G.")
+    with st.spinner(t['processing_data']):
+        dfScopus, longitudactual, longitudnueva, contadorborrado = process_data(dfScopus_raw, t_process_strings)
 
-    with st.expander("Ver Resumen del Procesamiento"):
-        st.subheader("Información del DataFrame")
+    st.sidebar.header(t['sidebar_header_filters'])
+
+    CantidadAutores = st.sidebar.slider(t['slider_top_authors'], 5, 50, 10, 5)
+    CantidadPalabrasClave = st.sidebar.slider(t['slider_top_keywords'], 5, 50, 20, 5)
+    CantidadFuentes = st.sidebar.slider(t['slider_top_sources'], 5, 50, 10, 5)
+    search_string = st.sidebar.text_input(t['text_search_author'], "Lauder G.")
+
+    with st.expander(t['expander_processing_summary']):
+        st.subheader(t['info_header'])
         buffer = io.StringIO()
         dfScopus.info(buf=buffer)
         st.text(buffer.getvalue())
-        st.subheader("Limpieza de Palabras Clave")
-        st.metric("Registros antes", longitudactual)
-        st.metric("Registros después", longitudnueva)
-        st.metric("Eliminados", contadorborrado, delta_color="inverse")
+        st.subheader(t['keywords_cleaning_header'])
+        st.metric(t['metric_before'], longitudactual)
+        st.metric(t['metric_after'], longitudnueva)
+        st.metric(t['metric_removed'], contadorborrado, delta_color="inverse")
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "Análisis de Autores", 
-        "Análisis de Publicaciones", 
-        "Análisis de Palabras Clave", 
-        "Fuentes y Afiliación", 
-        "Análisis de Citaciones",
-        "Búsqueda y Rankings"
-    ])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(t['tab_names'])
 
     with tab1:
-        st.header("Análisis de Autores")
-        st.subheader(f"Top {CantidadAutores} Autores (Formato Corto)")
+        st.header(t['tab1_header'])
+        st.subheader(t['tab1_subheader_top_authors_short'].format(count=CantidadAutores))
         try:
             autores = dfScopus['LISTAUTORES'].explode()
             if not autores.empty:
@@ -209,17 +393,17 @@ if dfScopus_raw is not None:
                 fig1, ax1 = plt.subplots(figsize=(10, altura_dinamica_1))
                 
                 bars1 = ax1.barh(top_autores_df['Author'], top_autores_df['Count'], color='skyblue')
-                ax1.set_title(f'Top {CantidadAutores} Autores más Frecuentes')
+                ax1.set_title(t['tab1_plot_title_top_authors_short'].format(count=CantidadAutores))
                 ax1.invert_yaxis()
                 for bar in bars1:
                     ax1.text(bar.get_width(), bar.get_y() + bar.get_height()/2, f'{bar.get_width()}', ha='left', va='center')
                 st.pyplot(fig1)
             else:
-                st.warning("No hay datos.")
+                st.warning(t['warning_no_data'])
         except Exception as e:
             st.error(f"Error: {e}")
 
-        st.subheader(f"Top {CantidadAutores} Autores (Nombre Completo)")
+        st.subheader(t['tab1_subheader_top_authors_full'].format(count=CantidadAutores))
         try:
             autorescompletos = dfScopus['LISTAUTORESCOMPLETOS'].explode()
             if not autorescompletos.empty:
@@ -230,7 +414,7 @@ if dfScopus_raw is not None:
                 fig2, ax2 = plt.subplots(figsize=(10, altura_dinamica_2))
                 
                 bars2 = ax2.barh(top_autores_completos_df['Author'], top_autores_completos_df['Count'], color='lightgreen')
-                ax2.set_title(f'Top {CantidadAutores} Autores (Nombres Completos)')
+                ax2.set_title(t['tab1_plot_title_top_authors_full'].format(count=CantidadAutores))
                 ax2.invert_yaxis()
                 for bar in bars2:
                     ax2.text(bar.get_width(), bar.get_y() + bar.get_height()/2, f'{bar.get_width()}', ha='left', va='center')
@@ -238,7 +422,7 @@ if dfScopus_raw is not None:
         except Exception as e:
             st.error(f"Error: {e}")
 
-        st.subheader("Número de autores por publicación")
+        st.subheader(t['tab1_subheader_authors_per_pub'])
         try:
             if 'CANTIDADAUTORES' in dfScopus.columns:
                 df3filtrado = dfScopus[dfScopus['CANTIDADAUTORES'] >= 1]
@@ -248,11 +432,10 @@ if dfScopus_raw is not None:
                     
                     bars3 = ax3.bar(conteo_autores.index, conteo_autores.values) 
                     
-                    ax3.set_title('Número de autores por publicación')
-                    ax3.set_xlabel('Número de autores')
-                    ax3.set_ylabel('Publicaciones')
+                    ax3.set_title(t['tab1_plot_title_authors_per_pub'])
+                    ax3.set_xlabel(t['tab1_plot_xlabel_authors_per_pub'])
+                    ax3.set_ylabel(t['tab1_plot_ylabel_authors_per_pub'])
                     
-                    # Bucle para poner el texto sobre cada barra
                     for bar in bars3:
                         height = bar.get_height()
                         ax3.text(
@@ -268,8 +451,8 @@ if dfScopus_raw is not None:
             st.error(f"Error: {e}")
 
     with tab2:
-        st.header("Análisis de Publicaciones")
-        st.subheader("Distribución de publicaciones por año")
+        st.header(t['tab2_header'])
+        st.subheader(t['tab2_subheader_pub_by_year'])
         try:
             pubporanio = dfScopus['ANIO'].value_counts().sort_index()
             if not pubporanio.empty:
@@ -285,7 +468,7 @@ if dfScopus_raw is not None:
         except Exception as e:
             st.error(f"Error: {e}")
 
-        st.subheader("Publicaciones acumuladas por año")
+        st.subheader(t['tab2_subheader_pub_by_year_cumulative'])
         try:
             if not pubporanio.empty:
                 df_acum = pubporanio.reset_index()
@@ -293,16 +476,16 @@ if dfScopus_raw is not None:
                 df_acum = df_acum.sort_values(by='ANIO')
                 df_acum['Acumulado'] = df_acum['count'].cumsum()
                 fig5, ax5 = plt.subplots(figsize=(12, 6))
-                ax5.bar(df_acum['ANIO'], df_acum['count'], color='lightblue', label='Por año')
+                ax5.bar(df_acum['ANIO'], df_acum['count'], color='lightblue', label=t['tab2_plot_label_yearly'])
                 ax5b = ax5.twinx()
-                ax5b.plot(df_acum['ANIO'], df_acum['Acumulado'], color='red', marker='o', label='Acumulado')
+                ax5b.plot(df_acum['ANIO'], df_acum['Acumulado'], color='red', marker='o', label=t['tab2_plot_label_cumulative'])
                 ax5.legend(loc='upper left')
                 ax5b.legend(loc='upper right')
                 st.pyplot(fig5)
         except Exception as e:
             st.error(f"Error: {e}")
 
-        st.subheader("Distribución de Tipos de Documentos")
+        st.subheader(t['tab2_subheader_doc_types'])
         try:
             if 'TIPO' in dfScopus.columns:
                 document_type_counts = dfScopus['TIPO'].value_counts()
@@ -319,7 +502,7 @@ if dfScopus_raw is not None:
         except Exception as e:
             st.error(f"Error: {e}")
 
-        st.subheader("Distribución de Caracteres en el Título")
+        st.subheader(t['tab2_subheader_title_chars'])
         try:
             if 'CARACTERESTITULO' in dfScopus.columns:
                 fig7, ax7 = plt.subplots(figsize=(10, 4))
@@ -329,14 +512,14 @@ if dfScopus_raw is not None:
             st.error(f"Error: {e}")
 
     with tab3:
-        st.header("Análisis de Palabras Clave")
+        st.header(t['tab3_header'])
         try:
             keywords_exploded = dfScopus['ALLKEYWORDS'].explode()
             keyword_counts = Counter(keywords_exploded)
             if '' in keyword_counts: del keyword_counts['']
             
             if keyword_counts:
-                st.subheader(f"Top {CantidadPalabrasClave} Palabras clave")
+                st.subheader(t['tab3_subheader_top_keywords'].format(count=CantidadPalabrasClave))
                 top_keywords_df = pd.DataFrame(keyword_counts.most_common(CantidadPalabrasClave), columns=['Keyword', 'Count'])
                 
                 altura_dinamica_8 = max(8, len(top_keywords_df) * 0.4)
@@ -348,18 +531,18 @@ if dfScopus_raw is not None:
                     ax8.text(bar.get_width(), bar.get_y() + bar.get_height()/2, f'{bar.get_width()}', ha='left', va='center')
                 st.pyplot(fig8)
 
-                st.subheader("Nube de Palabras")
+                st.subheader(t['tab3_subheader_word_cloud'])
                 wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(keyword_counts)
                 fig9, ax9 = plt.subplots(figsize=(10, 6))
                 ax9.imshow(wordcloud, interpolation='bilinear')
                 ax9.axis('off')
                 st.pyplot(fig9)
             else:
-                st.warning("No hay palabras clave.")
+                st.warning(t['tab3_warning_no_keywords'])
         except Exception as e:
             st.error(f"Error: {e}")
 
-        st.subheader("Frecuencia de palabras en el título")
+        st.subheader(t['tab3_subheader_title_words'])
         try:
             if 'TITULO' in dfScopus.columns:
                 palabras_titulo = dfScopus['TITULO'].dropna().str.lower().str.cat(sep=';').split(' ')
@@ -381,8 +564,8 @@ if dfScopus_raw is not None:
             st.error(f"Error: {e}")
 
     with tab4:
-        st.header("Análisis de Fuentes y Afiliación")
-        st.subheader(f"Top {CantidadFuentes} Fuentes de publicación")
+        st.header(t['tab4_header'])
+        st.subheader(t['tab4_subheader_top_sources'].format(count=CantidadFuentes))
         try:
             if 'FUENTE' in dfScopus.columns:
                 source_counts = dfScopus['FUENTE'].value_counts().head(CantidadFuentes)
@@ -400,7 +583,7 @@ if dfScopus_raw is not None:
         except Exception as e:
             st.error(f"Error: {e}")
 
-        st.subheader("Instituciones más Frecuentes")
+        st.subheader(t['tab4_subheader_top_institutions'])
         if 'Afilaciones' in dfScopus.columns:
             try:
                 instituciones = dfScopus['Afilaciones'].explode()
@@ -419,7 +602,7 @@ if dfScopus_raw is not None:
             except Exception as e:
                 st.error(f"Error: {e}")
 
-            st.subheader("Países más frecuentes")
+            st.subheader(t['tab4_subheader_top_countries'])
             try:
                 pais = dfScopus['Pais'].explode().dropna()
                 if not pais.empty:
@@ -436,24 +619,24 @@ if dfScopus_raw is not None:
             except Exception as e:
                 st.error(f"Error: {e}")
         else:
-            st.warning("Sin datos de afiliación.")
+            st.warning(t['tab4_warning_no_affiliation_data'])
 
     with tab5:
-        st.header("Análisis de Citaciones")
+        st.header(t['tab5_header'])
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader("Acceso Abierto")
+            st.subheader(t['tab5_subheader_open_access'])
             try:
                 oa_counts = dfScopus['OPENACCESS'].value_counts()
                 fig14, ax14 = plt.subplots(figsize=(6, 6))
                 if not oa_counts.empty:
-                    ax14.pie(oa_counts, autopct='%1.1f%%', colors=['skyblue', 'red'], startangle=90, labels=["No", "Si"])
+                    ax14.pie(oa_counts, autopct='%1.1f%%', colors=['skyblue', 'red'], startangle=90, labels=[t['tab5_pie_label_no'], t['tab5_pie_label_yes']])
                     st.pyplot(fig14)
             except Exception as e:
                 st.error(f"Error: {e}")
 
         with col2:
-            st.subheader("Publicaciones con citaciones")
+            st.subheader(t['tab5_subheader_cited_pubs'])
             try:
                 cit_counts = dfScopus['Citado'].value_counts()
                 fig15, ax15 = plt.subplots(figsize=(6, 6))
@@ -463,7 +646,7 @@ if dfScopus_raw is not None:
             except Exception as e:
                 st.error(f"Error: {e}")
 
-        st.subheader("Distribución de Citaciones (Log)")
+        st.subheader(t['tab5_subheader_citation_dist'])
         try:
             if 'CITACIONES' in dfScopus.columns:
                 cits = dfScopus['CITACIONES'].value_counts().sort_index()
@@ -474,25 +657,25 @@ if dfScopus_raw is not None:
         except Exception as e:
             st.error(f"Error: {e}")
 
-        st.subheader("Boxplot Citaciones (Todas vs Review)")
+        st.subheader(t['tab5_subheader_boxplot_citations'])
         try:
             if 'TIPO' in dfScopus.columns and 'CITACIONES' in dfScopus.columns:
                 rev = dfScopus[dfScopus['TIPO'] == 'Review']
                 fig17, ax17 = plt.subplots(figsize=(10, 6))
                 datos = [dfScopus['CITACIONES'].dropna(), rev['CITACIONES'].dropna()]
-                bp = ax17.boxplot(datos, labels=["Todas", "Review"], showfliers=False)
+                bp = ax17.boxplot(datos, labels=[t['tab5_boxplot_label_all'], t['tab5_boxplot_label_review']], showfliers=False)
                 for i, m in enumerate(bp['medians']):
                     if len(m.get_ydata()) > 0: ax17.text(i+1, m.get_ydata()[0], f'{m.get_ydata()[0]:.2f}', ha='center', va='bottom')
                 st.pyplot(fig17)
         except Exception as e:
             st.error(f"Error: {e}")
 
-        st.subheader("Boxplot Citaciones por Año")
+        st.subheader(t['tab5_subheader_boxplot_citations_per_year'])
         try:
             if 'Citaciones por año' in dfScopus.columns:
                 fig18, ax18 = plt.subplots(figsize=(10, 6))
                 datos = [dfScopus['Citaciones por año'].dropna()]
-                bp = ax18.boxplot(datos, labels=["Todas"], showfliers=False)
+                bp = ax18.boxplot(datos, labels=[t['tab5_boxplot_label_all']], showfliers=False)
                 for i, m in enumerate(bp['medians']):
                     if len(m.get_ydata()) > 0: ax18.text(i+1, m.get_ydata()[0], f'{m.get_ydata()[0]:.2f}', ha='center', va='bottom')
                 st.pyplot(fig18)
@@ -500,8 +683,8 @@ if dfScopus_raw is not None:
             st.error(f"Error: {e}")
 
     with tab6:
-        st.header("Búsqueda y Rankings")
-        st.subheader(f"Búsqueda: '{search_string}'")
+        st.header(t['tab6_header'])
+        st.subheader(t['tab6_subheader_search_results'].format(query=search_string))
         if search_string and 'AUTORES' in dfScopus.columns:
             res = dfScopus[dfScopus['AUTORES'].str.contains(search_string, na=False)]
             cols = [c for c in ['TITULO', 'AUTORES', 'CITACIONES'] if c in res.columns]
@@ -510,24 +693,27 @@ if dfScopus_raw is not None:
         st.divider()
         c1, c2, c3 = st.columns(3)
         with c1:
-            st.subheader("Top Impacto (General)")
+            st.subheader(t['tab6_subheader_top_impact_general'])
             if 'CITACIONES' in dfScopus.columns:
                 st.dataframe(dfScopus.sort_values(by='CITACIONES', ascending=False)[['TITULO', 'CITACIONES']].head(10))
         with c2:
-            st.subheader("Top Impacto (Review)")
+            st.subheader(t['tab6_subheader_top_impact_review'])
             if 'TIPO' in dfScopus.columns and 'CITACIONES' in dfScopus.columns:
                 st.dataframe(dfScopus[dfScopus['TIPO'] == 'Review'].sort_values(by='CITACIONES', ascending=False)[['TITULO', 'CITACIONES']].head(10))
         with c3:
-            st.subheader("Top Impacto (Cit./Año)")
+            st.subheader(t['tab6_subheader_top_impact_cites_per_year'])
             if 'Citaciones por año' in dfScopus.columns:
                 st.dataframe(dfScopus.sort_values(by='Citaciones por año', ascending=False)[['TITULO', 'Citaciones por año']].head(10))
 
-    with st.expander("Ver DataFrame Completo"):
+    with st.expander(t['expander_full_dataframe']):
         st.dataframe(dfScopus)
 else:
-    if data_source == "Subir mi propio archivo CSV" and uploaded_file is None:
+    if data_source == t['radio_source_option_2'] and uploaded_file is None:
         pass
-    elif data_source == "Usar datos de ejemplo":
-        st.info("Cargando datos de ejemplo...")
+    elif data_source == t['radio_source_option_1']:
+        if dfScopus_raw is None:
+            pass
+        else:
+            st.info(t['info_loading_sample'])
     else:
-        st.info("Sube un archivo para comenzar.")
+        st.info(t['info_upload_prompt'])
