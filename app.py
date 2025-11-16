@@ -99,7 +99,9 @@ translations = {
         'warning_year_not_found': "Columna 'Year' no encontrada.",
         'warning_affiliations_not_found': "Columna 'Affiliations' no encontrada.",
         'cited_yes': 'Si',
-        'cited_no': 'No'
+        'cited_no': 'No',
+        'download_button_label': "Descargar DataFrame (CSV)",
+        'download_file_name': "analisis_scopus.csv"
     },
     'en': {
         'page_title': "Scopus Analysis",
@@ -185,7 +187,9 @@ translations = {
         'warning_year_not_found': "'Year' column not found.",
         'warning_affiliations_not_found': "'Affiliations' column not found.",
         'cited_yes': 'Yes',
-        'cited_no': 'No'
+        'cited_no': 'No',
+        'download_button_label': "Download DataFrame (CSV)",
+        'download_file_name': "scopus_analysis.csv"
     }
 }
 
@@ -203,6 +207,10 @@ def ContarAutores(dato):
         return len(dato)
     else:
         return 0
+
+@st.cache_data
+def convert_df_to_csv(df):
+    return df.to_csv(index=False).encode('utf-8')
 
 @st.cache_data
 def load_sample_data(file_path, t_error_string):
@@ -334,15 +342,10 @@ else:
     
     try:
         img = Image.open("image_292efe.png")
-        
         width, height = img.size
-
         pixeles_a_cortar = 50 
-
         crop_coords = (0, 0, width, height - pixeles_a_cortar)
-        
         cropped_img = img.crop(crop_coords)
-        
         st.image(cropped_img, caption=t['image_caption'], use_container_width=True)
 
     except FileNotFoundError:
@@ -560,17 +563,7 @@ if dfScopus_raw is not None:
             if 'TITULO' in dfScopus.columns:
                 palabras_titulo = dfScopus['TITULO'].dropna().str.lower().str.cat(sep=';').split(' ')
                 cuenta_palabras_titulo = Counter(palabras_titulo)
-                palabras_df = pd.DataFrame(cuenta_palabras_titulo.most_common(), columns=['Palabra', 'Numero'])
-                palabras_df = palabras_df[(palabras_df['Palabra'].str.len() > 3) & (palabras_df['Numero'] > 40)]
-                stop_words = ['from', 'with', 'research', 'analysis', 'using', 'based', 'model', 'control', 'between', 'study']
-                palabras_df = palabras_df[~palabras_df['Palabra'].isin(stop_words)]
-
-                if not palabras_df.empty:
-                    
-                    altura_dinamica_10 = max(8, len(palabras_df) * 0.35)
-                    fig10, ax10 = plt.subplots(figsize=(10, altura_dinamica_10))
-                    
-                    bars10 = ax10.barh(palabras_df['Palabra'], palabras_df['Numero'], color='red')
+                palabras_df = pd.DataFrame(cuenta_palab"palabras_df['Palabra'], palabras_df['Numero'], color='red')
                     ax10.invert_yaxis()
                     st.pyplot(fig10)
         except Exception as e:
@@ -717,6 +710,17 @@ if dfScopus_raw is not None:
             st.subheader(t['tab6_subheader_top_impact_cites_per_year'])
             if 'Citaciones por año' in dfScopus.columns:
                 st.dataframe(dfScopus.sort_values(by='Citaciones por año', ascending=False)[['TITULO', 'Citaciones por año']].head(10))
+
+    st.divider()
+
+    csv_data = convert_df_to_csv(dfScopus)
+    
+    st.download_button(
+       label=t['download_button_label'],
+       data=csv_data,
+       file_name=t['download_file_name'],
+       mime='text/csv',
+    )
 
     with st.expander(t['expander_full_dataframe']):
         st.dataframe(dfScopus)
