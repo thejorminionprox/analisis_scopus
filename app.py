@@ -10,6 +10,7 @@ from datetime import datetime
 from collections import Counter
 import warnings
 from wordcloud import WordCloud
+from PIL import Image
 
 warnings.filterwarnings("ignore")
 
@@ -25,9 +26,9 @@ translations = {
         'upload_prompt': "Carga tu archivo CSV de Scopus:",
         'upload_success': "¡Archivo cargado exitosamente!",
         'upload_error': "Error al leer el archivo CSV: {e}",
-        'info_instructions': "**Instrucciones:** Para utilizar tu propia base de datos, el archivo CSV debe tener una estructura específica. La siguiente imagen muestra los campos (columnas) requeridos para que el análisis funcione correctamente.",
-        'image_caption': "Rúbrica: Campos necesarios en la base de datos de Scopus",
-        'warning_image_load': "No se pudo cargar la imagen de referencia.",
+        'info_instructions': "Para utilizar tu propia base de datos, el archivo CSV debe tener una estructura específica que contenga campos como Autores, Título, Año, Citaciones, Palabras clave, Tipo de Documento y Afiliaciones.",
+        'image_caption': "Campos necesarios en la base de datos de Scopus",
+        'warning_image_load': "No se pudo cargar la imagen de referencia 'image_292efe.png'.",
         'processing_data': "Procesando datos...",
         'sidebar_header_filters': "Filtros Interactivos",
         'slider_top_authors': "Top Autores Frecuentes:",
@@ -111,9 +112,9 @@ translations = {
         'upload_prompt': "Upload your Scopus CSV file:",
         'upload_success': "File uploaded successfully!",
         'upload_error': "Error reading CSV file: {e}",
-        'info_instructions': "**Instructions:** To use your own database, the CSV file must have a specific structure. The following image shows the required fields (columns) for the analysis to work correctly.",
-        'image_caption': "Rubric: Required fields in the Scopus database",
-        'warning_image_load': "Could not load reference image.",
+        'info_instructions': "To use your own database, the CSV file must have a specific structure containing fields like Authors, Title, Year, Citations, Keywords, Document Type, and Affiliations.",
+        'image_caption': "Required fields in the Scopus database",
+        'warning_image_load': "Could not load reference image 'image_292efe.png'.",
         'processing_data': "Processing data...",
         'sidebar_header_filters': "Interactive Filters",
         'slider_top_authors': "Top Frequent Authors:",
@@ -270,7 +271,6 @@ def process_data(df_raw, t_strings):
     current_year = datetime.now().year
     if 'CITACIONES' in dfScopus.columns and 'ANIO' in dfScopus.columns:
         dfScopus['Citaciones por año'] = dfScopus['CITACIONES'] / (current_year + 1 - dfScopus['ANIO'])
-        # Usamos los strings de t_strings
         dfScopus['Citado'] = np.where(dfScopus['CITACIONES'] > 0, t_strings['cited_yes'], t_strings['cited_no'])
     else:
         dfScopus['CITACIONES'] = 0
@@ -333,9 +333,22 @@ else:
     st.info(t['info_instructions'])
     
     try:
-        st.image("image_292efe.png", caption=t['image_caption'], use_container_width=True)
-    except:
+        img = Image.open("image_292efe.png")
+        
+        width, height = img.size
+
+        pixeles_a_cortar = 50 
+
+        crop_coords = (0, 0, width, height - pixeles_a_cortar)
+        
+        cropped_img = img.crop(crop_coords)
+        
+        st.image(cropped_img, caption=t['image_caption'], use_container_width=True)
+
+    except FileNotFoundError:
         st.warning(t['warning_image_load'])
+    except Exception as e:
+        st.warning(f"No se pudo cargar o recortar la imagen 'image_292efe.png': {e}")
     
     st.markdown("---")
 
@@ -349,7 +362,7 @@ else:
             st.error(t['upload_error'].format(e=e))
 
 if dfScopus_raw is not None:
-
+    
     t_process_strings = {
         'warning_authors_not_found': t['warning_authors_not_found'],
         'warning_year_not_found': t['warning_year_not_found'],
@@ -491,7 +504,7 @@ if dfScopus_raw is not None:
                 document_type_counts = dfScopus['TIPO'].value_counts()
                 if not document_type_counts.empty:
                     fig6, ax6 = plt.subplots(figsize=(10, 6))
-                    bars6 = document_type_counts.plot(kind='bar', color='lightblue', ax=ax6)
+                    bars6 = document_type_counts.plot(kind='bar', ax=ax6)
                     for bar in bars6.containers[0]:
                         ax6.text(bar.get_x() + bar.get_width()/2, bar.get_height(), f'{bar.get_height()}', ha='center', va='bottom')
                     plt.xticks(rotation=45, ha='right')
